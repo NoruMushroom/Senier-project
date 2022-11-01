@@ -29,7 +29,7 @@ FaceID는 깊이 측정 카메라인 TrueDepth 카메라를 사용하여 수천 
 </div>
 <h2>8.회원 탈퇴</h2>
 더 이상 출석 체크를 할 필요가 없을 때 회원 탈퇴를 하여 데이터베이스의 개인정보와 PC에 올라가있는 사진들 그리고 임베딩 되어있는 자료들까지 모두 지울 수 있다.
-<h2> * 안드로이드</h2>
+<h2>9.안드로이드</h2>
 안드로이드에서 데이터베이스에 접속하기 위해서는 PHP를 이용해야 한다. HTTP 웹서버인 아파치를 구축하였고 서버 내에 있는 PHP 파일에 입력된 사용자의 회원 정보를 담아 데이터베이스에 업로드 한다.
 데이터베이스의 갱신 컬럼의 값에 따라 안드로이드에서 시스템 접근 상태가 정해지며, 갱신 컬럼은 안드로이드에서 대리 회원 가입을 막기 위함이다.
 <p align="center">
@@ -47,15 +47,15 @@ PC의 출석 프로그램에서는 실시간으로 스레드 실행하여 웹 �
 <img src=https://user-images.githubusercontent.com/57284689/199152977-5edccb90-26dc-414e-8476-c6a4be597e41.png width = 250 height = 350>
 <img src=https://user-images.githubusercontent.com/57284689/199152981-9b9363ad-a352-4002-bc1f-82decfedddfe.png width = 250 height = 350>
 </div>
-<h2>9.업무 분담</h2>
+<h2>10.업무 분담</h2>
 <div align ="center">
 <img src= https://user-images.githubusercontent.com/57284689/199153132-6b2e35b1-03d3-406c-b787-b3ce5edab0af.png width = 500 height = 200>
 </div>
-<h2>10.프로젝트 진행 차트</h2>
+<h2>11.프로젝트 진행 차트</h2>
 <div align ="center">
 <img src= https://user-images.githubusercontent.com/57284689/199153323-5c91110f-c26d-4e9a-a677-b9ed76abf458.png width = 500 height = 200>
 </div>
-<h2>11.논문</h2>
+<h2>12.논문</h2>
 <h2> * 참고 자료 </h2>
 
 [1] Joseph Redmon, “You Only Look Once: Unified,Real-Ti
