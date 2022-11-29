@@ -69,3 +69,7 @@ detection and semantic segmentation,” IEEE Conference
 on Computer Vision and Pattern Recognition, pp.
 580-587, 2014</br>
 [3] J. Deng, J. Guo, N. Xue and S. Zafeiriou, "ArcFace: Additive Angular Margin Loss for Deep Face Recognition," 2019 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), 2019, pp. 4685-4694, doi: 10.1109/CVPR.2019.00482.</br>
+
+
+
+11
