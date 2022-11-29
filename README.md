@@ -69,3 +69,5 @@ detection and semantic segmentation,” IEEE Conference
 on Computer Vision and Pattern Recognition, pp.
 580-587, 2014</br>
 [3] J. Deng, J. Guo, N. Xue and S. Zafeiriou, "ArcFace: Additive Angular Margin Loss for Deep Face Recognition," 2019 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), 2019, pp. 4685-4694, doi: 10.1109/CVPR.2019.00482.</br>
+[4] Anwar, Aqeel, and Arijit Raychowdhury. "Masked face recognition for secure authentication." arXiv preprint arXiv:2008.11104 (2020).</br>
+[5] Barragan, Andres. "ADVANCES IN EYE BLINK DETECTION: EVALUATING CONVOLUTIONAL NEURAL NETWORK BASED BLINK DETECTION ON REAL WORLD DATA." (2020).</br>

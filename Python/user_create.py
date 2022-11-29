@@ -32,7 +32,7 @@ class Ui_user_create(object):
         GRADE = self.Grade.currentText()
         if ID and NAME and PW and GRADE: # 생성
             register(ID,PW,NAME,GRADE)
-            First_pickle()
+            exists_Pickle()
             with open('C:/AHard/Project/user_img/User_Register.txt', 'r') as file:
                 line = None
                 while line != '':
@@ -43,11 +43,11 @@ class Ui_user_create(object):
             del embedding_list[len(embedding_list)-1]
             for i in embedding_list:
         # 파일 피클 파일 생성
-                embedding = DE.represent(img_path = i, enforce_detection = False )
+                embedding = DeepFace.represent(img_path = i, enforce_detection = False )
                 user_embedding = [i, embedding]
                 with open(default.PKL_NoMask_Path ,"ab") as train:
                     pickle.dump(user_embedding, train)
-                mask_embed_save(i,ID)
+                save_masked_image(i)
             embedding_list = []
             with open("C:/AHard/Project/user_img/User_Register.txt", "w") as f:
                 f.write("")   

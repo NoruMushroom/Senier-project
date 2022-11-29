@@ -3,11 +3,11 @@ from mysql.connector import Error
 
 def user_list():
     try:
-        connection = mysql.connector.connect(host='39.124.26.132',
-                                                database='student',
+        connection = mysql.connector.connect(host='127.0.0.1',port='3306',
+                                                database='abc',
                                                 user='root',
-                                                password='123456')
-
+                                                password='whtjdgus3198@@')
+        
         cursor = connection.cursor()
         sql = "SELECT userID, name FROM user;"
 
@@ -27,3 +27,5 @@ def user_list():
         if (connection.is_connected()):
             cursor.close()
             connection.close()
+
+user_list()

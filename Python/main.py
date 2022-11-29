@@ -1,10 +1,8 @@
-#날짜 증가하는 버튼 및 날짜 초기화 버튼 만들기(디테일 살릴려면 해야됨)
 from MySQLdb import Time
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import *
 import time
 import os
-import re
 from __default__ import *
 from user_create import Ui_user_create
 from user_delete import Ui_user_delete
@@ -15,9 +13,17 @@ from DB.user_list import user_list
 import DB.appfilesave as appsave
 from datetime import timedelta, datetime
 
-weeklist = []
-daylist = []
-first = datetime(2022, 5, 12, 12, 30, 00, 0) ######
+
+
+
+'''connection = mysql.connector.connect(host='127.0.0.1',port='3306',
+                                                user='root',
+                                                password='whtjdgus3198@@')
+
+connection.is_connected()'''
+
+weeklist = daylist = []
+first = Attendance_date ######
 curr = datetime.now()
 user_list()
 for i in range(0, 5):
@@ -25,50 +31,29 @@ for i in range(0, 5):
     weeklist.append(second)
     daylist.append(second.date())
 try:
-        currlimit = weeklist[daylist.index(curr.date())]
+    currlimit = weeklist[daylist.index(curr.date())]
 except:
-        currlimit = None
+    currlimit = None
         
-class Photo_data_recv(QtCore.QThread): #안드로이드에서 전송한 사진을 다운로드 후 유사도 측정 후 매칭 여부에 따라 피클파일 추가
+class Photo_data_recv(QtCore.QThread): 
+    '''안드로이드에서 전송한 사진을 다운로드 후 유사도 측정 후 매칭 여부에 따라 피클파일 추가'''
     #parent = MainWidget을 상속 받음.
     def __init__(self, parent = None):
         super(Photo_data_recv, self).__init__(parent)
 
     def run(self):
-        file_list = []
-        new_list = []
-        delete_list = []
+        file_list = new_list = delete_list = []
         while True:
             filelist()
             for (root, directories, files) in os.walk(Photo_Path):
                 for file in files:
                     if ".jpg" in file:
-                        '''file_path = os.path.join(root, file)
-                        file_path = file_path.replace("\\", "/")
-                        number = re.sub(r'[^0-9]', '', file_path)
-                        number = int(number) % 1000;
-                        number = format(number, '03')
-                        a1 = file_path.replace("_" + str(number), "")           # 수정 5/23
-                        a2 = a1.replace(".jpg", "")                             # 수정 5/23
-                        a3 = a2.replace(Photo_Path+ "/", "")
-                        file_list.append(a3)'''
-                        file_path = os.path.join(root, file)
-                        file_path = file_path.replace("\\", "/")
-                        number = re.sub(r'[^0-9]', '', file_path)
-                        number = int(number) % 1000;
-                        number = format(number, '03')
-                        a1 = file_path.replace("_" + str(number), "")           # 수정 5/23
-                        a2 = a1.replace(".jpg", "")                             # 수정 5/23
-                        a3 = a2.replace(Photo_Path+ "/", "")
-                        a4 = re.sub(r'[^0-9]', '', a3)
-                        a5 = int(a4) % 100000000;
-                        file_list.append(str(a5))
+                        file_list.append(str(file[0:8]))
             if file_list == []:
-                empty_variable = 0
+                None
             else:
                 for v in file_list:
-                    if v not in new_list:
-                                    
+                    if v not in new_list:            
                         new_list.append(v)
                 print("신규 학번 : "+ str(new_list))        
                 for z in new_list:
@@ -78,10 +63,10 @@ class Photo_data_recv(QtCore.QThread): #안드로이드에서 전송한 사진�
                 new_list.clear()
                 file_list.clear()
             
-            delete_list = delete_userlist()
+            delete_list = delete_userlist()     ####
             print(delete_list)
             if delete_list == []:
-                empty_variable = 0
+                None
             else:
                 for i in delete_list:
                     delete_pickle(i)
@@ -89,10 +74,8 @@ class Photo_data_recv(QtCore.QThread): #안드로이드에서 전송한 사진�
             time.sleep(10)
 class Ui_MainWindow(object):
     def Late(self):
-        global daylist
-        global weeklist
-        daylist=[]
-        weeklist = []
+        global daylist, weeklist
+        daylist = weeklist = []
         for i in range(0, 5):
             abc = datetime.now()
             cba = datetime(first.year, first.month, first.day, (abc.hour-1))
@@ -106,11 +89,9 @@ class Ui_MainWindow(object):
             self.Present_Time.setText("수업 시간 : None")
             
     def Absent(self):
-        global daylist
-        global weeklist
-        daylist=[]
-        weeklist = []
-        for i in range(0, 5):
+        global daylist, weeklist
+        daylist = weeklist = []
+        for i in range(0,5):
             abc = datetime.now()
             cba = datetime(first.year, first.month, first.day, (abc.hour-4))
             second = cba + timedelta(weeks=i)
@@ -123,10 +104,8 @@ class Ui_MainWindow(object):
             self.Present_Time.setText("수업 시간 : None")
             
     def Attend(self):
-        global daylist
-        global weeklist
-        daylist=[]
-        weeklist = []
+        global daylist, weeklist
+        daylist = weeklist = []
         for i in range(0, 5):
             abc = datetime.now()
             cba = datetime(first.year, first.month, first.day, (abc.hour+1))
@@ -154,10 +133,9 @@ class Ui_MainWindow(object):
         self.ui.setupUi(self.window)
         self.window.show()#창전환
     def face_matching_window(self):
-        global daylist
-        global weeklist
+        global daylist, weeklist
         lines = [] # 학번 이름이 저장된 리스트
-        with open("C:/AHard/Project/DB/User_List.txt") as f:
+        with open("./DB/User_List.txt") as f: 
             lines = f.readlines()
         lines = [line.rstrip('\n') for line in lines]
         print("이름:",lines)
@@ -223,14 +201,14 @@ class Ui_MainWindow(object):
         self.Attend_Btn.clicked.connect(lambda : self.Attend())
         self.Late_Btn.clicked.connect(lambda : self.Late())
         self.Absent_Btn.clicked.connect(lambda : self.Absent())
-        Logo =QPixmap('C:/AHard/Project/Logo/Logo.png')
+        Logo =QPixmap('./Logo/Logo.png')
         self.Logo.setPixmap(Logo)
 
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
-    File = open("C:/AHard/Project/Ui/Devsion.qss", 'r')
+    File = open("./Ui/Devsion.qss", 'r')
     with File:
         qss = File.read()
         app.setStyleSheet(qss)

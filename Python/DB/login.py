@@ -7,7 +7,7 @@ def login(id, password):
     global a
     a = ""
     try:
-        connection = mysql.connector.connect(host='39.124.26.132',
+        connection = mysql.connector.connect(host='127.0.0.1',port='3306',
                                                 database='student',
                                                 user='root',
                                                 password='123456')

@@ -76,12 +76,10 @@ class Ui_user_photo(object):
 
     def Take_photo(self, StudentID, frame, score, Dialog):
         global embedding_list
-        file_path = ""
-        numbers = ""
+        file_path = numbers = ""
             
         NoMask_folder_name = NoMask_DB_Path +"/"+ str(StudentID)
         if score > 0.9:
-             
             for (root, directories, files) in os.walk(NoMask_folder_name):
                 for file in files:
                     if '.jpg' in file:
@@ -89,21 +87,18 @@ class Ui_user_photo(object):
                         
                         
             if file_path == "":
-                file_path = NoMask_folder_name+ "/" + str(StudentID) + "_000.jpg" 
+                file_path = os.path.join(NoMask_folder_name, str(StudentID) + "_000.jpg")
                             
-            numbers = re.sub(r'[^0-9]', '', file_path)
-            numbers = int(numbers) % 1000;
-            numbers = format(numbers, '03')
-            a1 = file_path.replace("_"+str(numbers), "")
-            a2 = a1.replace(".jpg", "")
-            numbers = int(numbers) + 1
-            numbers = format(numbers, '03')
-            cameraimg_path = str(a2)+ "_" + numbers +".jpg"
-            cameraimg_path = cameraimg_path.replace("\\", "/")
-            print(cameraimg_path)
-            cv2.imwrite(cameraimg_path, frame)
-            with open("C:/AHard/Project/user_img/User_Register.txt", "a") as f:
-                f.write(cameraimg_path+'\n')
+            number = os.path.basename(file_path)
+            number = int(number[-7:-4]) + 1
+            number = format(number, '03')
+            # dir , studentID + _ + number + extension
+            savePath = os.path.join(os.path.dirname(file_path),
+                        os.path.basename(file_path)[0:8] + "_" + number + os.path.splitext(file_path)[1])
+            savePath = savePath.replace("\\", "/")
+            cv2.imwrite(savePath, frame)
+            with open("./user_img/User_Register.txt", "a") as f:
+                f.write(savePath+'\n')
             if self.count == 4:
                 Dialog.close()
             self.count = self.count + 1
@@ -114,15 +109,15 @@ class Ui_user_photo(object):
         self.Video.setPixmap(QtGui.QPixmap.fromImage(image))
     def close_video(self,Dialog,StudentID):
         if self.count == 4:
-            First_pickle()
+            exists_Pickle()
             for i in embedding_list:
             # 파일 피클 파일 생성
-                embedding = DE.represent(img_path = i, enforce_detection = False )
+                embedding = DeepFace.represent(img_path = i, enforce_detection = False )
                 user_embedding = [i, embedding]
 
                 with open(default.PKL_NoMask_Path ,"ab") as train:
                     pickle.dump(user_embedding, train)
-                mask_embed_save(i,StudentID)
+                save_masked_image(i)
             self.grabber.stop()
             embedding_list = []
             Dialog.close()
