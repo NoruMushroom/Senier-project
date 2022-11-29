@@ -1,6 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import cv2
-import cvlib as cv
 from Face_detection import *
 from socket import *
 from choose_student_name import Ui_choose_student_name
@@ -8,21 +7,27 @@ from datetime import timedelta, datetime
 from DB.attendance import atd_upload
 from Temp_error import Ui_Temp_error
 import time
+from retinaface import RetinaFace
+       
+#2 지울거
+#1 체온       
+
+#1 체온
+# ip = "172.18.9.7"
+# port = 1127
+# clientSocket = socket(AF_INET, SOCK_STREAM)    
+# clientSocket.connect((ip,port))
+                     
+
+
 
 save_img = cameraimg = None
-Face_Area = []
-ip = "172.18.9.7"
-port = 1127
-clientSocket = socket(AF_INET, SOCK_STREAM)    
-#1clientSocket.connect((ip,port))                                    #######
-send_data = None
-recv_data = None
-StudentID = None
-dddown = 9            # 0.6 > x > 0.05 mask
-ddup = 0            # 0.45 > x # nomask
-distest = []
+Face_Area = distest = []
+send_data = recv_data = StudentID = None
+dddown = 9           
+ddup = 0            
 Thread_Pause = True
-curtime = [11,16]
+curtime = [datetime.now().month,datetime.now().day]
 class Temp_data_send(QtCore.QThread):
     #parent = MainWidget을 상속 받음.
     def __init__(self, parent = None):
@@ -32,31 +37,33 @@ class Temp_data_send(QtCore.QThread):
         global Face_Area
         while Thread_Pause:
             if len(Face_Area) == 4:
-                send_data = str(Face_Area)#데이터 수신
+                #1 체온
+                #send_data = str(Face_Area)    
                 #print(str(Face_Area))
-                #1clientSocket.send(send_data.encode())              #######
+                #1clientSocket.send(send_data.encode())              
                 time.sleep(0.5)
 class Temp_data_recv(QtCore.QThread):
     #parent = MainWidget을 상속 받음.
     def __init__(self, parent = None):
         super(Temp_data_recv, self).__init__(parent)
-        global Thread_Pause
+        #2global Thread_Pause
     def run(self):
         while Thread_Pause:
             global recv_data
-            #1recv_data = clientSocket.recv(1024)#데이터 수신                #######
-            #1recv_data = recv_data.decode("utf-8")                          #######
+            #1 체온
+            #recv_data = clientSocket.recv(1024)                            
+            #recv_data = recv_data.decode("utf-8")                          
             time.sleep(1)
 class Temp_Data(QtCore.QThread):
     def __init__(self, parent=None):
         super(Temp_Data, self).__init__(parent)
         global recv_data
-        global Thread_Pause
     signal = QtCore.pyqtSignal(str)
     def run(self):
         while Thread_Pause:
             self.signal.emit(str(recv_data))
             time.sleep(1)
+            
 class Name_Data(QtCore.QThread):
     def __init__(self, parent=None):
         super(Name_Data, self).__init__(parent)
@@ -85,11 +92,9 @@ class FrameGrabber(QtCore.QThread):
         while True:
             ret, img = self.cap.read()
             if ret:
-                detector = RetinaFace(0)
                 save_imgone = img
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                faces = detector(img)
-                #print(faces)
+                faces = RetinaFace.detect_faces(img)
                 if not faces == []:
                     box, landmarks, self.score = faces[0]
                 if self.score >= 0.93:
