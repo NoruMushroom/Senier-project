@@ -68,11 +68,9 @@ class Name_Data(QtCore.QThread):
     def __init__(self, parent=None):
         super(Name_Data, self).__init__(parent)
         global StudentID
-        global Thread_Pause
     signal = QtCore.pyqtSignal(str)
     def run(self):
         while Thread_Pause:
-            #print("결과:" + StudentID)
             self.signal.emit(str(StudentID))
             time.sleep(0.5)
 class FrameGrabber(QtCore.QThread):
@@ -91,10 +89,12 @@ class FrameGrabber(QtCore.QThread):
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)
         while True:
             ret, img = self.cap.read()
+            
             if ret:
                 save_imgone = img
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                 faces = RetinaFace.detect_faces(img)
+                print(faces)
                 if not faces == []:
                     box, landmarks, self.score = faces[0]
                 if self.score >= 0.93:
