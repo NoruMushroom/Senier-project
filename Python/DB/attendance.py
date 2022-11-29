@@ -5,10 +5,9 @@ from numpy import rec
 def atd_upload(id, week, attendance):
 
     try:
-        connection = mysql.connector.connect(host='39.124.26.132',
-                                                database='student',
+        connection = mysql.connector.connect(host='127.0.0.1',port='3306',
                                                 user='root',
-                                                password='123456')
+                                                password='whtjdgus3198@@')
 
         cursor = connection.cursor(prepared = True)
         sql = 'UPDATE attend SET {0} = %s WHERE userID = %s;'.format(week)

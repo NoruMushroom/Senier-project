@@ -14,18 +14,11 @@ import DB.appfilesave as appsave
 from datetime import timedelta, datetime
 
 
-
-
-'''connection = mysql.connector.connect(host='127.0.0.1',port='3306',
-                                                user='root',
-                                                password='whtjdgus3198@@')
-
-connection.is_connected()'''
-
 weeklist = daylist = []
 first = Attendance_date ######
 curr = datetime.now()
-user_list()
+user_list(host, port, user, password)
+
 for i in range(0, 5):
     second = first + timedelta(weeks=i)
     weeklist.append(second)
@@ -135,12 +128,12 @@ class Ui_MainWindow(object):
     def face_matching_window(self):
         global daylist, weeklist
         lines = [] # 학번 이름이 저장된 리스트
-        with open("./DB/User_List.txt") as f: 
+        with open(r"Python\DB\User_List.txt") as f: 
             lines = f.readlines()
         lines = [line.rstrip('\n') for line in lines]
         print("이름:",lines)
         self.window = QtWidgets.QDialog()
-        self.ui = Ui_user_face(daylist, weeklist, lines)
+        self.ui = Ui_user_face(daylist, weeklist)
         self.ui.setupUi(self.window)
         self.window.show()  # 창전환
     def setupUi(self, MainWindow):          
@@ -208,7 +201,7 @@ if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
-    File = open("./Ui/Devsion.qss", 'r')
+    File = open(r".\Python\Ui\Devsion.qss", 'r')
     with File:
         qss = File.read()
         app.setStyleSheet(qss)

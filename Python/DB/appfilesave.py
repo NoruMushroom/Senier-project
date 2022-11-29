@@ -4,7 +4,6 @@
 import os
 import sys
 import mysql.connector
-from mysql.connector import Error
 
 from completion.deep.deepface import DeepFace as DE
 import os
