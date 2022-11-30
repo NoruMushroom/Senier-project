@@ -3,13 +3,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from user_create_complete import Ui_user_complete
 from user_create_error import Ui_user_error
 from user_create_photo import Ui_user_photo
-from mysql.connector import Error
 from DB.register import register
 from DB.user_list import user_list
 from sqlalchemy import false
 from Face_detection import *
 from __default__ import *
-from completion.face_detection.detector import RetinaFace
 import os
 import shutil
 
@@ -19,8 +17,7 @@ class Ui_user_create(object):
             if os.path.isdir(default.NoMask_DB_Path +"/"+ID) and os.path.isdir(default.Mask_DB_Path +"/"+ID) :
                 shutil.rmtree(default.NoMask_DB_Path +"/"+ID)
                 shutil.rmtree(default.Mask_DB_Path +"/"+ID)
-                with open("C:/AHard/Project/user_img/User_Register.txt", "w") as f:
-                    f.write("")  
+                with open(r"Python\user_img\User_Register.txt", "w") as f: f.write("")  
                 Dialog.close()
         else:
             Dialog.close()
@@ -33,7 +30,7 @@ class Ui_user_create(object):
         if ID and NAME and PW and GRADE: # 생성
             register(ID,PW,NAME,GRADE)
             exists_Pickle()
-            with open('C:/AHard/Project/user_img/User_Register.txt', 'r') as file:
+            with open(r"Python\user_img\User_Register.txt", "r") as file:
                 line = None
                 while line != '':
                     line = file.readline()
@@ -41,16 +38,22 @@ class Ui_user_create(object):
                     embedding_list.append(line)
             print(embedding_list)
             del embedding_list[len(embedding_list)-1]
+            with open(default.PKL_Mask_Path ,"rb") as r:
+                pkl = pickle.load(r)
+            # 파일 피클 파일 생성
             for i in embedding_list:
-        # 파일 피클 파일 생성
-                embedding = DeepFace.represent(img_path = i, enforce_detection = False )
+                embedding = DeepFace.represent(img_path = i,
+                                               enforce_detection=False,
+                                               model_name ='ArcFace',
+                                               detector_backend='retinaface')
                 user_embedding = [i, embedding]
-                with open(default.PKL_NoMask_Path ,"ab") as train:
-                    pickle.dump(user_embedding, train)
-                save_masked_image(i)
+                pkl.append(user_embedding)
+            with open(default.PKL_NoMask_Path ,"wb") as train:
+                pickle.dump(pkl, train)
+            save_masked_image(embedding_list)
+                
             embedding_list = []
-            with open("C:/AHard/Project/user_img/User_Register.txt", "w") as f:
-                f.write("")   
+            with open(r"Python\user_img\User_Register.txt", "w") as f: f.write("")   
             user_list()
             self.window = QtWidgets.QDialog()
             self.ui = Ui_user_complete()
@@ -62,20 +65,24 @@ class Ui_user_create(object):
             self.ui = Ui_user_error()
             self.ui.setupUi(self.window)
             self.window.show()
+            
     def take_photo(self):
         file = self.ID.text()
         if file:
-            os.mkdir('C:/AHard/Project/user_img/NoMask/' + file)
-            os.mkdir('C:/AHard/Project/user_img/Mask/' + file)
+            if not os.path.exists(os.path.join(NoMask_DB_Path , file)):
+                os.mkdir(os.path.join(NoMask_DB_Path , file))
+                os.mkdir(os.path.join(Mask_DB_Path, file))
             self.window = QtWidgets.QDialog()
             self.ui = Ui_user_photo(file)
             self.ui.setupUi(self.window)
             self.window.show()
+            
         else:
             self.window = QtWidgets.QDialog()
             self.ui = Ui_user_error()
             self.ui.setupUi(self.window)
             self.window.show()
+            
     def setupUi(self, user_create):
         user_create.setObjectName("회원가입")
         user_create.resize(390, 411)

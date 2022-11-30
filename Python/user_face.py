@@ -8,7 +8,12 @@ from DB.attendance import atd_upload
 from Temp_error import Ui_Temp_error
 import time
 from retinaface import RetinaFace
-       
+from deepface import DeepFace
+import numpy as np
+from PIL import Image
+from keras.preprocessing.image import img_to_array
+import tensorflow as tf
+import matplotlib.pyplot as plt
 #2 지울거
 #1 체온       
 
@@ -89,7 +94,6 @@ class FrameGrabber(QtCore.QThread):
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)
         while True:
             ret, img = self.cap.read()
-            
             if ret:
                 save_imgone = img
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

@@ -7,33 +7,34 @@ import os
 from sqlalchemy import false
 from Face_detection import *
 from __default__ import NoMask_DB_Path
-from completion.face_detection.detector import RetinaFace
+from retinaface import RetinaFace
 embedding_list = []
+
 class FrameGrabber(QtCore.QThread):
+    signal = QtCore.pyqtSignal(QtGui.QImage)
     def __init__(self, parent=None):
         super(FrameGrabber, self).__init__(parent)
-        self.cap = cv2.VideoCapture(1 + cv2.CAP_DSHOW)
+        self.cap = cv2.VideoCapture(0 + cv2.CAP_DSHOW)
         self.frame = None
         self.save_file = None
         self.score = 0.1
-    signal = QtCore.pyqtSignal(QtGui.QImage)
+        
     def run(self):
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)
         while True:
             self.success, self.frame = self.cap.read()
             if self.success:
-                detector = RetinaFace(0)
                 self.save_file = self.frame
                 self.frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
-                
-                faces = detector(self.frame)
-                if not faces == []:
-                    box, landmarks, self.score = faces[0]
-            #print(score)
-                if self.score >= 0.93:
-                    box = box.astype(np.int)
+                faces = RetinaFace.detect_faces(self.frame)
+                if type(faces) == dict:
+                    box, landmarks, self.score = (faces['face_1']['facial_area'],
+                                             faces['face_1']['landmarks'],
+                                             faces['face_1']['score'])
                     cv2.rectangle(self.frame, (box[0], box[1]), (box[2], box[3]), color=(255, 0, 0), thickness=2)
+                else:
+                    box, landmarks, self.score = None, None, 0
             try:
                 image = QtGui.QImage(self.frame, self.frame.shape[1], self.frame.shape[0], QtGui.QImage.Format_RGB888)
                 self.signal.emit(image)
@@ -55,7 +56,7 @@ class Ui_user_photo(object):
         self.Photo = QtWidgets.QPushButton(Dialog)
         self.Photo.setGeometry(QtCore.QRect(10, 500, 640, 40))
         self.Photo.setObjectName("Photo")
-        self.Photo.clicked.connect(lambda : self.Take_photo(self.name,self.grabber.save_file,self.grabber.score, Dialog))
+        self.Photo.clicked.connect(lambda : self.Take_photo(self.name, self.grabber.save_file, self.grabber.score, Dialog))
         #self.Back = QtWidgets.QPushButton(Dialog)
         #self.Back.setGeometry(QtCore.QRect(335, 500, 315, 40))
         #self.Back.setObjectName("Back")
@@ -75,32 +76,34 @@ class Ui_user_photo(object):
         #self.Back.setText(_translate("Dialog", "돌아가기"))
 
     def Take_photo(self, StudentID, frame, score, Dialog):
-        global embedding_list
-        file_path = numbers = ""
-            
-        NoMask_folder_name = NoMask_DB_Path +"/"+ str(StudentID)
+        file_path = ""
+        global embedding_list    
+        studentid_path = os.path.join(NoMask_DB_Path, str(StudentID))
         if score > 0.9:
-            for (root, directories, files) in os.walk(NoMask_folder_name):
+            for (root, directories, files) in os.walk(studentid_path):
                 for file in files:
                     if '.jpg' in file:
                         file_path = os.path.join(root, file)
                         
                         
             if file_path == "":
-                file_path = os.path.join(NoMask_folder_name, str(StudentID) + "_000.jpg")
+                file_path = os.path.join(studentid_path, str(StudentID) + "_000.jpg")
                             
             number = os.path.basename(file_path)
             number = int(number[-7:-4]) + 1
             number = format(number, '03')
-            # dir , studentID + _ + number + extension
             savePath = os.path.join(os.path.dirname(file_path),
-                        os.path.basename(file_path)[0:8] + "_" + number + os.path.splitext(file_path)[1])
+                                    os.path.basename(file_path)[0:8] + "_" + number + os.path.splitext(file_path)[1])
+            
             savePath = savePath.replace("\\", "/")
+            embedding_list.append(savePath)
             cv2.imwrite(savePath, frame)
-            with open("./user_img/User_Register.txt", "a") as f:
+            with open(r"Python\user_img\User_Register.txt", "a") as f:
                 f.write(savePath+'\n')
             if self.count == 4:
                 Dialog.close()
+                self.close_video(Dialog, self.name)
+                
             self.count = self.count + 1
             self.Photo.setText("사진 촬영" + "("+ str(self.count) + "장" + ")")    
     
@@ -108,16 +111,23 @@ class Ui_user_photo(object):
     def updateFrame(self, image):
         self.Video.setPixmap(QtGui.QPixmap.fromImage(image))
     def close_video(self,Dialog,StudentID):
+        with open(default.PKL_NoMask_Path ,"rb") as t:
+            pkl = pickle.load(t)
         if self.count == 4:
             exists_Pickle()
+            global embedding_list
+            print(embedding_list)
             for i in embedding_list:
             # 파일 피클 파일 생성
-                embedding = DeepFace.represent(img_path = i, enforce_detection = False )
+                embedding = DeepFace.represent(img_path = i,
+                                               enforce_detection = False,
+                                               model_name ='ArcFace', 
+                                               detector_backend = 'retinaface')
                 user_embedding = [i, embedding]
-
-                with open(default.PKL_NoMask_Path ,"ab") as train:
-                    pickle.dump(user_embedding, train)
-                save_masked_image(i)
+                pkl.append(user_embedding)
+            with open(default.PKL_NoMask_Path ,"wb") as t:
+                pickle.dump(pkl, t)
+            save_masked_image(embedding_list)
             self.grabber.stop()
             embedding_list = []
             Dialog.close()

@@ -21,23 +21,33 @@ fail_count = 0
 def save_pickle():
     '''Add the latest face image'''
     print("파일 추가중입니다.")
+    with open(default.PKL_NoMask_Path,"wb") as m:
+        pkl_m= pickle.load(m)
+    with open(default.PKL_NoMask_Path,"wb") as n:
+        pkl_n= pickle.load(n)
     with open("NoMask.txt") as f:
         lines = f.readlines()
     lines = [line.rstrip('\n') for line in lines]
     for i in lines:
-        embedding = DeepFace.represent(img_path = i, model_name = 'ArcFace',detector_backend = 'retinaface')
+        embedding = DeepFace.represent(img_path = i,
+                                       model_name = 'ArcFace',
+                                       detector_backend = 'retinaface')
         path_embedding = [i, embedding]
-        with open(default.PKL_NoMask_Path,"ab") as train:
-            pickle.dump(path_embedding, train)
+        pkl_n.append(path_embedding)
+    with open(default.PKL_NoMask_Path,"ab") as train:
+        pickle.dump(pkl_n, train)
     
     with open("Mask.txt") as f:
         lines = f.readlines()
     lines = [line.rstrip('\n') for line in lines]
     for i in lines:
-        embedding = DeepFace.represent(img_path = i, model_name = 'ArcFace',detector_backend = 'retinaface')
+        embedding = DeepFace.represent(img_path = i, 
+                                       model_name = 'ArcFace',
+                                       detector_backend = 'retinaface')
         path_embedding = [i, embedding]
-        with open(default.PKL_Mask_Path,"ab") as train:
-            pickle.dump(path_embedding, train)    
+        pkl_m.append(path_embedding)
+    with open(default.PKL_Mask_Path,"ab") as train:
+        pickle.dump(pkl_m, train)    
             
     print("파일 추가 완료")
     with open('NoMask.txt','w',encoding='UTF-8') as f:
@@ -65,55 +75,59 @@ def exists_Pickle():
             pickle.dump([], b)
 
             
-def save_masked_image(path:str):
+def save_masked_image(path_list:list):
     '''
     Cover the underside of the nose from the face bounding box using a white box
     
-    path(str) = ```image path```
+    list = ```image path```
     '''
-    maskedImagePath = None
-    studentID = os.path.basename(path)[0:8]
-    img = cv2.imread(path)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    faces = RetinaFace.detect_faces(img)
-    if type(faces) == dict:
-            box, landmarks, score = (faces['face_1']['facial_area'],
-                                     faces['face_1']['landmarks'],
-                                     faces['face_1']['score'])
-    else:
-        box, landmarks, score = [], [], 0        
-        print("face not found")
-        return
-        
-        
-    b = box[3] + box[1]
-    b = b / 100 * 50
-    cv2.rectangle(img, (box[0], int(b)), (box[2], box[3]), color=(255, 255, 255), thickness=-1)
-    for (root, directories, files) in os.walk(f"{default.Mask_DB_Path}/{studentID}"):
-        for file in files:
-            if '.jpg' in file:
-                maskedImagePath = os.path.join(root, file)
-                
-    if maskedImagePath == None:
-        maskedImagePath = maskedImagePath+ "/" + studentID + "_000.jpg" 
+    with open(default.PKL_Mask_Path ,"rb") as r:
+        pkl = pickle.load(r)
     
+    for path in path_list:    
+        maskedImagePath = ""
+        studentID = os.path.basename(path)[0:8]
+        img = cv2.imread(path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        faces = RetinaFace.detect_faces(img)
+        if type(faces) == dict:
+                box, landmarks, score = (faces['face_1']['facial_area'],
+                                        faces['face_1']['landmarks'],
+                                        faces['face_1']['score'])
+        else:
+            box, landmarks, score = [], [], 0        
+            print("face not found")
+            return
+            
+            
+        b = box[3] + box[1]
+        b = b / 100 * 50
+        cv2.rectangle(img, (box[0], int(b)), (box[2], box[3]), color=(255, 255, 255), thickness=-1)
+        for (root, directories, files) in os.walk(f"{default.Mask_DB_Path}/{studentID}"):
+            for file in files:
+                if '.jpg' in file:
+                    maskedImagePath = os.path.join(root, file)
+                    
+        if maskedImagePath == "":
+            maskedImagePath =  os.path.join(f"{default.Mask_DB_Path}/{studentID}",
+                                            str(studentID) + "_001.jpg" )
+        
 
-    number = os.path.basename(maskedImagePath)
-    number = int(number[-7:-4]) + 1
-    number = format(number, '03')
-    # dir , studentID + _ + number + extension
-    savePath = os.path.join(os.path.dirname(maskedImagePath),
-                            os.path.basename(maskedImagePath)[0:8] + "_" + number + os.path.splitext(maskedImagePath)[1])
-    savePath = savePath.replace("\\", "/")
-    
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    cv2.imwrite(savePath, img)
-    embedding = DeepFace.represent(img_path = savePath,
-                                   enforce_detection = False,
-                                   model_name ='ArcFace', 
-                                   detector_backend = 'retinaface')
-    
-    with open(default.PKL_Mask_Path ,"ab") as w:
-        pickle.dump([savePath, embedding], w)             
-                        
+        number = os.path.basename(maskedImagePath)
+        number = int(number[-7:-4]) + 1
+        number = format(number, '03')
+        # dir , studentID + _ + number + extension
+        savePath = os.path.join(os.path.dirname(maskedImagePath),
+                                os.path.basename(maskedImagePath)[0:8] + "_" + number + os.path.splitext(maskedImagePath)[1])
+        savePath = savePath.replace("\\", "/")
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        cv2.imwrite(savePath, img)
+        embedding = DeepFace.represent(img_path = savePath,
+                                    enforce_detection = False,
+                                    model_name ='ArcFace', 
+                                    detector_backend = 'retinaface')
+        user_list = [savePath,embedding]
+        pkl.append(user_list)
+    with open(default.PKL_Mask_Path ,"wb") as w:
+        pickle.dump(pkl, w)             
 exists_Pickle()
