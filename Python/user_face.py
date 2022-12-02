@@ -24,8 +24,6 @@ import matplotlib.pyplot as plt
 # clientSocket.connect((ip,port))
                      
 
-
-
 save_img = cameraimg = None
 Face_Area = distest = []
 send_data = recv_data = StudentID = None
@@ -93,107 +91,31 @@ class FrameGrabber(QtCore.QThread):
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)
         while True:
+            end = time.time()
             ret, img = self.cap.read()
             if ret:
-                save_imgone = img
+                image = img
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                 faces = RetinaFace.detect_faces(img)
-                print(faces)
-                if not faces == []:
-                    box, landmarks, self.score = faces[0]
-                if self.score >= 0.93:
-                    end = time.time()
-                    c = end - self.star
-                    box = box.astype(np.int)
-                    cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), color=(255, 0, 0), thickness=2)
-                    
-                    '''
-                    b = box[3] + box[1]
-                    b = b / 100 * 50
-                    boximg = cv2.rectangle(img, (box[0], int(b)), (box[2], box[3]), color=(255, 255, 255), thickness=-1)'''
-                    
-                    Face_Area = box[0], box[1], box[2], box[3]
-                    
-                    if c > 5:
-                        
-                        #df = DE.find(img_path=img, db_path=self.DB_Path, enforce_detection=False)
-                        df = DE.find(img_path=img, db_path=self.DB_Path, enforce_detection=False)
-                        save_img = save_imgone
-                        
-                        # 마스크 시 얼굴인식
-                        try:
-                            img_dis = df.iloc[0][1] 
-                            if img_dis < dddown and img_dis > ddup:
-                                dflist = []
-                                all_number = None
-                                df_count = 0
-                                while len(dflist) < 10 or len(dflist) < len(df) - 1 :
-                                    all_number = re.sub(r'[^0-9]', '', df.identity[df_count])
-                                    rank_number = int(all_number) % 1000
-                                    rank_number = format(rank_number, '03')
-                                    id_number = df.identity[df_count].replace("_"+ rank_number + ".jpg", "")
-                                    all_number = re.sub(r'[^0-9]', '', id_number)
-                                    Final_id = int(all_number) % 100000000
-                                    if dflist.count(Final_id) == 3:
-                                        df_count += 1
-                                        continue
-                                    else:
-                                        dflist.append(Final_id)
-                                        df_count +=1
-                                print(dflist)
-                                    
-                                aaa = dflist
-                                aaa.reverse()
-                                result = list(set(aaa))
-                                total_list = []
-                                for l in result:
-                                    ranking = list(filter(lambda x: aaa[x] == l, range(len(aaa))))
-                                    total_list.append(sum(ranking))
-                                    
 
-                                list_index = total_list.index(max(total_list))
-                                result[list_index]
-                                id_str = df[df['identity'].str.contains(str(result))]
-                                
-                                First_Path = os.path.dirname(id_str.iloc[0][0])   
-                                for (root, directories, files) in os.walk(First_Path):
-                                    for file in files:
-                                        if '.jpg' in file:
-                                            file_path = os.path.join(root, file)
-                                StudentID = result
-                                print("학번은 : " + str(StudentID))
-                                cameraimg = saveImagePath(file_path)
-                                #print(cameraimg)
-                                #이미지 저장
-                                cv2.imwrite(cameraimg, save_img)
-                                
-                                # 사진 저장된 파일 리스트에 저장
-                                '''if self.DB_Path == default.NoMask_DB_Path:
-                                    #print(self.DB_Path)
-                                    embedding_list_No.append(cameraimg)
-                                else: 
-                                    #print(self.DB_Path)
-                                    embedding_list_Ma.append(cameraimg)'''
-                                    
-                                
-
-                                
-                            # 얼굴 매칭 실패 시
-                            # 캠 멈춰서 가리기        
-                            else:
-                                print("unknown")
-                                StudentID = "unknown"
-                        except:
-                            print("얼굴 인식 안됨")
-                            StudentID = "얼굴 인식 안됨"
+                if end > 3:
+                    if type(faces) == dict:
+                        box, landmarks, self.score = (faces['face_1']['facial_area'],
+                                                      faces['face_1']['landmarks'],
+                                                      faces['face_1']['score'])
+                        
+                                            #cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), color=(255, 0, 0), thickness=2)
+                        
+                        Face_Area = box[0], box[1], box[2], box[3]
+    
+                        
+                        StudentID = recognition(image, box, self.DB_Path)
+                        print("학번은 : " + str(StudentID))
+                        save_image(StudentID, image, self.DB_Path)
+                        #print(cameraimg)
                         self.star = time.time()
-                    
-                        
-                       
-                else:
-                    self.star = time.time()
-            #print(c)
-            #print(end - start) # 시간
+                    else: 
+                        box, landmarks, self.score = None, None, 0
             try:
                 image = QtGui.QImage(img, img.shape[1], img.shape[0], QtGui.QImage.Format_RGB888)
                 self.signal.emit(image)

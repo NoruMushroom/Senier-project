@@ -55,7 +55,29 @@ def save_pickle():
     with open('Mask.txt','w',encoding='UTF-8') as f:
             pass
         
+def save_image(id, img, img_db):
+    path = os.path.join(img_db,id)
+    save_path = ""
+    for (root, directories, files) in os.walk(path):
+        for file in files:
+            if '.jpg' in file:
+                save_path = os.path.join(root, file)
+    if save_path == "":
+        save_path =  os.path.join(f"{path}/", str(id) + "_001.jpg" )
+        
+
+    number = os.path.basename(save_path)
+    number = int(number[-7:-4]) + 1
+    number = format(number, '03')
+    # dir , studentID + _ + number + extension
+    save_path = os.path.join(os.path.dirname(save_path),
+                            os.path.basename(save_path)[0:8] + "_" + number + os.path.splitext(save_path)[1])
+    save_path = save_path.replace("\\", "/")
+    cv2.imwrite(save_path, img)                
+    save_list(save_path)
     
+    
+        
 def save_list(path:str):
     ''' Insert attendance completed face image '''
     if "NoMask" in path:
@@ -129,5 +151,30 @@ def save_masked_image(path_list:list):
         user_list = [savePath,embedding]
         pkl.append(user_list)
     with open(default.PKL_Mask_Path ,"wb") as w:
-        pickle.dump(pkl, w)             
+        pickle.dump(pkl, w)   
+        
+        
+        
+def recognition(img, box, img_db):
+    Rdict = DeepFace.find(img_path=img, 
+                          db_path=img_db,
+                          enforce_detection=False,
+                          model_name ='ArcFace',
+                          detector_backend='retinaface')
+    if len(Rdict) != 0:
+        studentID = os.path.basename(Rdict.iloc[0]['identity'])
+        studentID = studentID[0:8]
+        return studentID
+    else:
+        #print("None")
+        return None        
+        
+        
+        
+        
+        
+        
+        
+        
+                  
 exists_Pickle()
