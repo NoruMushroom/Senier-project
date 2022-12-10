@@ -1,11 +1,15 @@
 from retinaface import RetinaFace
+from retinaface.commons import postprocess
 from deepface import DeepFace
+from deepface.commons import functions
 import os
 import pickle
 import __default__ as default
 import cv2
-
+import numpy as np
+from keras_preprocessing import image
 #------------------------
+
 mask_file_patha = ""
 embedding_list_No = []
 file_list = []
@@ -14,10 +18,68 @@ embedding_list = []
 #------------------------
 down = 0.35
 up = 0.05
-embedding_list_No = []
 embedding_list_Ma = []
 fail_count = 0                           
-                            
+
+def face_box(img_path):
+    read_img = cv2.imread(img_path) if type(img_path)!=np.ndarray else img_path
+    img = cv2.cvtColor(read_img, cv2.COLOR_BGR2RGB)
+    faces = RetinaFace.detect_faces(img)
+    if type(faces) == dict:
+        box, landmarks, score = (faces['face_1']['facial_area'],
+                                faces['face_1']['landmarks'],
+                                faces['face_1']['score'])
+        img = postprocess.alignment_procedure(img, 
+                                              landmarks['right_eye'], 
+                                              landmarks['left_eye'],
+                                              landmarks['nose'])
+        img= img[box[1]: box[3], box[0]:box[2]].copy() 
+    return img
+
+def ArcFace(img_path, face = False):
+    '''
+    This function represents facial images as vectors.
+    img_path : img_path or image
+    face : Face detection
+    '''
+    from deepface.basemodels import ArcFace
+    model = ArcFace.loadModel()
+    read_img = cv2.imread(img_path) if type(img_path)!=np.ndarray else img_path
+    img = cv2.cvtColor(read_img, cv2.COLOR_BGR2RGB)
+    if face:
+        faces = RetinaFace.detect_faces(img)
+        if type(faces) == dict:
+            box, landmarks, score = (faces['face_1']['facial_area'],
+                                    faces['face_1']['landmarks'],
+                                    faces['face_1']['score'])
+            img = postprocess.alignment_procedure(img, landmarks['right_eye'],
+                                                  landmarks['left_eye'],
+                                                  landmarks['nose'])
+            img= img[box[1]: box[3], box[0]:box[2]].copy()
+
+    if img.shape[0] > 0 and img.shape[1] > 0:
+        factor_0 = 112 / img.shape[0]
+        factor_1 = 112 / img.shape[1]
+        factor = min(factor_0, factor_1)
+
+        dsize = (int(img.shape[1] * factor), int(img.shape[0] * factor))
+        img = cv2.resize(img, dsize)
+        diff_0 = 112 - img.shape[0]
+        diff_1 = 112 - img.shape[1]
+        img = np.pad(img, ((diff_0 // 2, diff_0 - diff_0 // 2),
+                           (diff_1 // 2, diff_1 - diff_1 // 2), (0, 0)), 'constant')
+
+    if img.shape[0:2] != 112:
+        img = cv2.resize(img, (112,112))
+
+    img_pixels = image.img_to_array(img)
+    img_pixels = np.expand_dims(img_pixels, axis = 0)
+    img_pixels /= 255
+    img = functions.normalize_input(img = img_pixels,
+                                    normalization = "ArcFace")
+    embedding = model.predict(img)[0].tolist()
+    return embedding
+           
 def save_pickle():
     '''Add the latest face image'''
     print("파일 추가중입니다.")
@@ -29,11 +91,8 @@ def save_pickle():
         lines = f.readlines()
     lines = [line.rstrip('\n') for line in lines]
     for i in lines:
-        embedding = DeepFace.represent(img_path = i,
-                                       model_name = 'ArcFace',
-                                       detector_backend = 'retinaface')
-        path_embedding = [i, embedding]
-        pkl_n.append(path_embedding)
+        embedding = ArcFace(i)
+        pkl_n.append([i, embedding])
     with open(default.PKL_NoMask_Path,"ab") as train:
         pickle.dump(pkl_n, train)
     
@@ -41,11 +100,8 @@ def save_pickle():
         lines = f.readlines()
     lines = [line.rstrip('\n') for line in lines]
     for i in lines:
-        embedding = DeepFace.represent(img_path = i, 
-                                       model_name = 'ArcFace',
-                                       detector_backend = 'retinaface')
-        path_embedding = [i, embedding]
-        pkl_m.append(path_embedding)
+        embedding = ArcFace(i)
+        pkl_m.append([i, embedding])
     with open(default.PKL_Mask_Path,"ab") as train:
         pickle.dump(pkl_m, train)    
             
@@ -101,7 +157,7 @@ def save_masked_image(path_list:list):
     '''
     Cover the underside of the nose from the face bounding box using a white box
     
-    list = ```image path```
+    list = ```image path(Just the face)```
     '''
     with open(default.PKL_Mask_Path ,"rb") as r:
         pkl = pickle.load(r)
@@ -111,7 +167,8 @@ def save_masked_image(path_list:list):
         studentID = os.path.basename(path)[0:8]
         img = cv2.imread(path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        faces = RetinaFace.detect_faces(img)
+        '''
+        faces = RetinaFace.detect_faces(img) 
         if type(faces) == dict:
                 box, landmarks, score = (faces['face_1']['facial_area'],
                                         faces['face_1']['landmarks'],
@@ -122,9 +179,11 @@ def save_masked_image(path_list:list):
             return
             
             
-        b = box[3] + box[1]
-        b = b / 100 * 50
-        cv2.rectangle(img, (box[0], int(b)), (box[2], box[3]), color=(255, 255, 255), thickness=-1)
+        img = postprocess.alignment_procedure(img, landmarks['right_eye'], landmarks['left_eye'],landmarks['nose'])
+        img= img[box[1]: box[3], box[0]:box[2]].copy()
+        '''
+        
+        cv2.rectangle(img, (0, img.shape[0]//2), (img.shape[1],img.shape[0]), color=(255, 255, 255), thickness=-1)
         for (root, directories, files) in os.walk(f"{default.Mask_DB_Path}/{studentID}"):
             for file in files:
                 if '.jpg' in file:
@@ -140,14 +199,13 @@ def save_masked_image(path_list:list):
         number = format(number, '03')
         # dir , studentID + _ + number + extension
         savePath = os.path.join(os.path.dirname(maskedImagePath),
-                                os.path.basename(maskedImagePath)[0:8] + "_" + number + os.path.splitext(maskedImagePath)[1])
+                                 os.path.basename(maskedImagePath)[0:8] + "_" + 
+                                number + os.path.splitext(maskedImagePath)[1])
         savePath = savePath.replace("\\", "/")
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         cv2.imwrite(savePath, img)
-        embedding = DeepFace.represent(img_path = savePath,
-                                    enforce_detection = False,
-                                    model_name ='ArcFace', 
-                                    detector_backend = 'retinaface')
+        
+        embedding = ArcFace(img)
         user_list = [savePath,embedding]
         pkl.append(user_list)
     with open(default.PKL_Mask_Path ,"wb") as w:
@@ -166,15 +224,6 @@ def recognition(img, box, img_db):
         studentID = studentID[0:8]
         return studentID
     else:
-        #print("None")
         return None        
         
-        
-        
-        
-        
-        
-        
-        
-                  
 exists_Pickle()
