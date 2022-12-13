@@ -55,50 +55,50 @@ def emotion(img, box):
     custom = model.predict(x)
     return custom,x
 
-mode = "recognition"
-while True:
-    
-    end= time.time()-start
-    ret, img = cap.read()
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    if end > 3 and mode == "recognition":
-        faces = RetinaFace.detect_faces(img_path = img)
-        if type(faces) == dict:
-            box, landmarks, score = (faces['face_1']['facial_area'],
-                                    faces['face_1']['landmarks'],
-                                    faces['face_1']['score'])
-            #cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), color=(255, 0, 0), thickness=2)
-            
-            #plt_emotion_analysis(custom[0], x)
+def test():
+    while True:
+        
+        end= time.time()-start
+        ret, img = cap.read()
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        if end > 3 and mode == "recognition":
+            faces = RetinaFace.detect_faces(img_path = img)
+            if type(faces) == dict:
+                box, landmarks, score = (faces['face_1']['facial_area'],
+                                        faces['face_1']['landmarks'],
+                                        faces['face_1']['score'])
+                #cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), color=(255, 0, 0), thickness=2)
+                
 
-            start = time.time()
-            mode = "emotion"
-            print("StudentID : " +(recognition(img)))
-            end= time.time()-start
+                start = time.time()
+                mode = "emotion"
+                print("StudentID : " +(recognition(img)))
+                end= time.time()-start
+                
+                
+        if end > 3 and mode == "emotion":        
+            faces = RetinaFace.detect_faces(img_path = img)
+            if type(faces) == dict:
+                box, landmarks, score = (faces['face_1']['facial_area'],
+                                        faces['face_1']['landmarks'],
+                                        faces['face_1']['score'])
+                #cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), color=(255, 0, 0), thickness=2)
+                custom ,x= emotion(img,box)
+                emo = np.where(custom[0] == max(custom[0]))
+                objects = ('angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral')    
+                plt_emotion_analysis(custom[0],x)
+                
+                print("Emotion : " +objects[emo[0][0]])
+                print(custom[0]) 
+                start = time.time()
+                mode = "recognition"       
             
-            
-    if end > 3 and mode == "emotion":        
-        faces = RetinaFace.detect_faces(img_path = img)
-        if type(faces) == dict:
-            box, landmarks, score = (faces['face_1']['facial_area'],
-                                    faces['face_1']['landmarks'],
-                                    faces['face_1']['score'])
-            #cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), color=(255, 0, 0), thickness=2)
-            custom ,x= emotion(img,box)
-            emo = np.where(custom[0] == max(custom[0]))
-            objects = ('angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral')    
-            
-            print("Emotion : " +objects[emo[0][0]])
-            print(custom[0]) 
-            start = time.time()
-            mode = "recognition"       
-         
-            
-    cv2.putText(img, str(int(end))+" mode : "+mode ,(20, 40), 5, 1, (0, 0, 255), 1)
-    cv2.imshow("", cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+                
+        cv2.putText(img, str(int(end))+" mode : "+mode ,(20, 40), 5, 1, (0, 0, 255), 1)
+        cv2.imshow("", cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-    
-cap.release()
-cv2.destroyAllWindows() 
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        
+    cap.release()
+    cv2.destroyAllWindows() 

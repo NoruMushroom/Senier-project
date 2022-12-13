@@ -9,8 +9,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import os
 from keras.models import load_model
-cap = cv2.VideoCapture(0)
-start = time.time()
+
 def recognition(img):
     Rdict = DeepFace.find(img_path=img, 
                           db_path=r'D:\Mask_Project\Senier-project\Python\user_img\NoMask',
@@ -71,44 +70,48 @@ def eye_blink(img, box, landmarks):
     right = eye_model.predict(x_r)
     return left[0][0], right[0][0] ,[x_l,x_r]
 
-mode = "recognition"
-while True:
+def test():
+    cap = cv2.VideoCapture(0)
+    start = time.time()
+    mode = "recognition"
     
-    end= time.time()-start
-    ret, img = cap.read()
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    if end > 3 and mode == "recognition":
-        faces = RetinaFace.detect_faces(img)
-        if type(faces) == dict:
-            box, landmarks, score = (faces['face_1']['facial_area'],
-                                    faces['face_1']['landmarks'],
-                                    faces['face_1']['score'])
-            start = time.time()
-            mode = "Eye_blink"
-            print("StudentID : " +str((recognition(img))))
-            end= time.time()-start
-            recognition_img = img
-            
-    if end > 3 and mode == "Eye_blink":        
-        faces = RetinaFace.detect_faces(img)
-        if type(faces) == dict:
-            box, landmarks, score = (faces['face_1']['facial_area'],
-                                    faces['face_1']['landmarks'],
-                                    faces['face_1']['score'])
-            left,right ,x= eye_blink(img,box,landmarks)
-            print("left : " +str(left))
-            print("right : " +str(right))
-            start = time.time()
-            mode = "recognition"       
-            df = DeepFace.verify(img1_path=img, img2_path=recognition_img, enforce_detection=False,
-                               model_name ='ArcFace',detector_backend='retinaface')
-            print(df['verified'])
-            
-    cv2.putText(img, str(int(end))+" mode : "+mode ,(20, 40), 5, 1, (0, 0, 255), 1)
-    cv2.imshow("", cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+    while True:
+        
+        end= time.time()-start
+        ret, img = cap.read()
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        if end > 3 and mode == "recognition":
+            faces = RetinaFace.detect_faces(img)
+            if type(faces) == dict:
+                box, landmarks, score = (faces['face_1']['facial_area'],
+                                        faces['face_1']['landmarks'],
+                                        faces['face_1']['score'])
+                start = time.time()
+                mode = "Eye_blink"
+                print("StudentID : " +str((recognition(img))))
+                end= time.time()-start
+                recognition_img = img
+                
+        if end > 3 and mode == "Eye_blink":        
+            faces = RetinaFace.detect_faces(img)
+            if type(faces) == dict:
+                box, landmarks, score = (faces['face_1']['facial_area'],
+                                        faces['face_1']['landmarks'],
+                                        faces['face_1']['score'])
+                left,right ,x= eye_blink(img,box,landmarks)
+                print("left : " +str(left))
+                print("right : " +str(right))
+                start = time.time()
+                mode = "recognition"       
+                df = DeepFace.verify(img1_path=img, img2_path=recognition_img, enforce_detection=False,
+                                model_name ='ArcFace',detector_backend='retinaface')
+                print(df['verified'])
+                
+        cv2.putText(img, str(int(end))+" mode : "+mode ,(20, 40), 5, 1, (0, 0, 255), 1)
+        cv2.imshow("", cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-    
-cap.release()
-cv2.destroyAllWindows() 
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        
+    cap.release()
+    cv2.destroyAllWindows() 

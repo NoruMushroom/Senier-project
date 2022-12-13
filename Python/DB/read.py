@@ -1,7 +1,6 @@
 from openpyxl import load_workbook, Workbook
 import pandas as pd
 import mysql.connector
-from mysql.connector import Error
 
 def user_down(path):
     try:

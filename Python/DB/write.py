@@ -1,6 +1,5 @@
 from openpyxl import Workbook
 import mysql.connector
-from mysql.connector import Error
 
 '''write_wb = Workbook()
 

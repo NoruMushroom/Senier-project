@@ -119,16 +119,13 @@ class Ui_user_photo(object):
     def updateFrame(self, image):
         self.Video.setPixmap(QtGui.QPixmap.fromImage(image))
     def close_video(self,Dialog,StudentID):
-        with open(default.PKL_NoMask_Path ,"rb") as t:
-            pkl = pickle.load(t)
         if self.count == 4:
             exists_Pickle()
             global embedding_list
             for i in embedding_list: # 파일 피클 파일 생성
                 embedding = ArcFace(i)
-                pkl.append([i, embedding])
-            with open(default.PKL_NoMask_Path ,"wb") as t:
-                pickle.dump(pkl, t)
+            with open(default.PKL_NoMask_Path ,"ab") as t:
+                pickle.dump([i, embedding], t)
             save_masked_image(embedding_list)
             self.grabber.stop()
             embedding_list = []

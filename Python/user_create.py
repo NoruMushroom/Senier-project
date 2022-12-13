@@ -38,19 +38,14 @@ class Ui_user_create(object):
                     embedding_list.append(line)
             print(embedding_list)
             del embedding_list[len(embedding_list)-1]
-            with open(default.PKL_Mask_Path ,"rb") as r:
-                pkl = pickle.load(r)
+
             # 파일 피클 파일 생성
             for i in embedding_list:
-                embedding = DeepFace.represent(img_path = i,
-                                               enforce_detection=False,
-                                               model_name ='ArcFace',
-                                               detector_backend='retinaface')
-                user_embedding = [i, embedding]
-                pkl.append(user_embedding)
-            with open(default.PKL_NoMask_Path ,"wb") as train:
-                pickle.dump(pkl, train)
-            save_masked_image(embedding_list)
+                embedding = ArcFace(img_path = i, face = True)
+                
+            with open(default.PKL_NoMask_Path ,"ab") as train:
+                pickle.dump([i, embedding], train)
+            save_masked_image(embedding_list,face=True)
                 
             embedding_list = []
             with open(r"Python\user_img\User_Register.txt", "w") as f: f.write("")   

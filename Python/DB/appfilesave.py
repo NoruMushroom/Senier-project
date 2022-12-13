@@ -2,7 +2,6 @@
 # 피클 리스트 만들기
 # 마스크 벗은 얼굴
 import os
-import sys
 import mysql.connector
 from deepface.commons import distance
 import os
@@ -10,11 +9,8 @@ import cv2
 import re
 import pickle
 import numpy as np
-from completion.face_detection.detector import RetinaFace
 import __default__ as default
 import shutil
-import gc
-import torch
 
 from ..Face_detection import *
 

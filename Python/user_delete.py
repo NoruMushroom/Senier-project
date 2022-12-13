@@ -14,7 +14,7 @@ class Ui_user_delete(object):
         for Dir in dir_path:
             a = []
             c = []
-            pkl_file = Dir + "/Folder_PKL.pkl"
+            pkl_file = os.path.join(Dir, default.pkl)
             with open(pkl_file ,"rb") as rd:
                 data = pickle.load(rd)
                 while 1:
@@ -35,7 +35,7 @@ class Ui_user_delete(object):
                 
             with open(pkl_file,"wb") as pkl:
                 pickle.dump(data, pkl)
-            dir_pathf = Dir +"/"+ str(name)
+            dir_pathf = os.path.join(Dir + str(name))
             if os.path.exists(dir_pathf):
                 shutil.rmtree(dir_pathf)
         Dialog.close

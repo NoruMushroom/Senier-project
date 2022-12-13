@@ -1,6 +1,3 @@
-from pyrsistent import b
-import requests
-from requests import get
 import requests
 from mysql.connector import Error
 import pickle

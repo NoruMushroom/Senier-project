@@ -1,5 +1,4 @@
 import mysql.connector
-from mysql.connector import Error
 
 def register(id, password, name, grade):
     try:
