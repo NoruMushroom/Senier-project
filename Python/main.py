@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import *
 import time
 import os
-from __default__ import *
+from Constant_Variable import *
 from user_create import Ui_user_create
 from user_delete import Ui_user_delete
 from user_face import Ui_user_face
@@ -15,9 +15,9 @@ from datetime import timedelta, datetime
 
 
 weeklist = daylist = []
-first = Attendance_date ######
+first = ATDATE ######
 curr = datetime.now()
-user_list(host, port, user, password)
+user_list(HOST, PORT, USER, PWD)
 
 for i in range(0, 5):
     second = first + timedelta(weeks=i)
@@ -38,7 +38,7 @@ class Photo_data_recv(QtCore.QThread):
         file_list = new_list = delete_list = []
         while True:
             filelist()
-            for (root, directories, files) in os.walk(Photo_Path):
+            for (root, directories, files) in os.walk(TEMP_PATH):
                 for file in files:
                     if ".jpg" in file:
                         file_list.append(str(file[0:8]))

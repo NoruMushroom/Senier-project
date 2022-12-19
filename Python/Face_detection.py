@@ -3,7 +3,7 @@ from retinaface.commons import postprocess
 from deepface.commons import functions
 import os
 import pickle
-import __default__ as default
+import Constant_Variable as Final
 import cv2
 import numpy as np
 from keras_preprocessing import image
@@ -90,7 +90,7 @@ def save_pickle():
     lines = [line.rstrip('\n') for line in lines]
     for i in lines:
         embedding = ArcFace(i)
-    with open(default.PKL_NoMask_Path,"ab") as train:
+    with open(Final.NOMASK_PKL,"ab") as train:
         pickle.dump([i, embedding], train)
     
     with open("Mask.txt") as f:
@@ -98,7 +98,7 @@ def save_pickle():
     lines = [line.rstrip('\n') for line in lines]
     for i in lines:
         embedding = ArcFace(i)
-    with open(default.PKL_Mask_Path,"ab") as train:
+    with open(Final.MASK_PKL,"ab") as train:
         pickle.dump([i, embedding], train)    
             
     print("파일 추가 완료")
@@ -141,11 +141,11 @@ def save_list(path:str):
              
 def exists_Pickle(): 
     ''' Create a pickle file if it does not exist '''
-    if not os.path.exists(default.PKL_Mask_Path):
-        with open(default.PKL_Mask_Path,"wb") as a:
+    if not os.path.exists(Final.MASK_PKL):
+        with open(Final.MASK_PKL,"wb") as a:
             pickle.dump([], a)
-    if not os.path.exists(default.PKL_NoMask_Path):
-        with open(default.PKL_NoMask_Path,"wb") as b:
+    if not os.path.exists(Final.NOMASK_PKL):
+        with open(Final.NOMASK_PKL,"wb") as b:
             pickle.dump([], b)
 
             
@@ -174,13 +174,13 @@ def save_masked_image(path_list:list,face = False):
             img= img[box[1]: box[3], box[0]:box[2]].copy()
         
         cv2.rectangle(img, (0, img.shape[0]//2), (img.shape[1],img.shape[0]), color=(255, 255, 255), thickness=-1)
-        for (root, directories, files) in os.walk(f"{default.Mask_DB_Path}/{studentID}"):
+        for (root, directories, files) in os.walk(f"{Final.MASK_PATH}/{studentID}"):
             for file in files:
                 if '.jpg' in file:
                     maskedImagePath = os.path.join(root, file)
                     
         if maskedImagePath == "":
-            maskedImagePath =  os.path.join(f"{default.Mask_DB_Path}/{studentID}",
+            maskedImagePath =  os.path.join(f"{Final.MASK_PATH}/{studentID}",
                                             str(studentID) + "_001.jpg" )
         
 
@@ -196,7 +196,7 @@ def save_masked_image(path_list:list,face = False):
         cv2.imwrite(savePath, img)
         
         embedding = ArcFace(img)
-    with open(default.PKL_Mask_Path ,"ab") as w:
+    with open(Final.MASK_PKL ,"ab") as w:
         pickle.dump( [savePath,embedding], w)   
         
         

@@ -16,12 +16,14 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 #2 지울거
 #1 체온       
-
 #1 체온
-ip = "172.18.9.7"
-port = 1127
-clientSocket = socket(AF_INET, SOCK_STREAM)    
-clientSocket.connect((ip,port))
+try:
+    ip = Final.HOST
+    port = Final.PORT
+    clientSocket = socket(AF_INET, SOCK_STREAM)    
+    clientSocket.connect((ip,port))
+except TimeoutError as e:
+    print(e)
 objects = ('angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral')                  
 save_img = cameraimg = None
 Face_Area = distest = []
@@ -79,8 +81,8 @@ class FrameGrabber(QtCore.QThread):
         super(FrameGrabber, self).__init__(parent)
         self.cap = cv2.VideoCapture(0 + cv2.CAP_DSHOW)
         self.star = time.time()
-        self.DB_Path =  default.Mask_DB_Path
-        self.default_PKL = default.PKL_Mask_Path
+        self.DB_Path =  Final.Mask_DB_Path
+        self.default_PKL = Final.PKL_Mask_Path
         self.score = 0
     signal = QtCore.pyqtSignal(QtGui.QImage)
     def run(self):
@@ -108,10 +110,10 @@ class FrameGrabber(QtCore.QThread):
                         
                         Face_Area = box[0], box[1], box[2], box[3]
     
-                        pkl = os.path.join(self.DB_Path,default.pkl )
+                        pkl = os.path.join(self.DB_Path,Final.pkl )
                         StudentID = recognition(image[box[1]: box[3], box[0]:box[2]],pkl ,dddown)
                         start1 = time.time()
-                        if self.DB_Path == default.Mask_DB_Path:
+                        if self.DB_Path == Final.Mask_DB_Path:
                             end1= time.time() - start1
                             while True and end1 < 3:
                                 from eye_blink import eye_blink
@@ -297,12 +299,12 @@ class Ui_user_face(object):
             self.window.show()#창전환
     def swap(self):
         global dddown
-        if self.grabber.DB_Path == default.Mask_DB_Path:
+        if self.grabber.DB_Path == Final.Mask_DB_Path:
             self.Change.setText("2차 인증(마스크 X)")
-            self.grabber.DB_Path = default.NoMask_DB_Path
+            self.grabber.DB_Path = Final.NoMask_DB_Path
             dddown = 0.45             
         else:
-            self.grabber.DB_Path = default.Mask_DB_Path
+            self.grabber.DB_Path = Final.Mask_DB_Path
             self.Change.setText("2차 인증(마스크 O)")
             dddown = 0.5            
         print(self.grabber.DB_Path)
