@@ -1,7 +1,7 @@
-from MySQLdb import Time
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import *
 import time
+import sys
 import os
 from Constant_Variable import *
 from user_create import Ui_user_create
@@ -10,132 +10,135 @@ from user_face import Ui_user_face
 from sign_in import Ui_user_sign_in
 from DB.filelist import *
 from DB.user_list import user_list
-import DB.appfilesave as appsave
+import DB.appfilesave as App
 from datetime import timedelta, datetime
 
 
-weeklist = daylist = []
-first = ATDATE ######
+week_list, day_list = [], []
+first = ATDATE
 curr = datetime.now()
 user_list(HOST, PORT, USER, PWD)
 
 for i in range(0, 5):
-    second = first + timedelta(weeks=i)
-    weeklist.append(second)
-    daylist.append(second.date())
+    second = first + timedelta(weeks = i)
+    week_list.append(second)
+    day_list.append(second.date())
 try:
-    currlimit = weeklist[daylist.index(curr.date())]
+    currlimit = week_list[day_list.index(curr.date())]
 except:
     currlimit = None
         
 class Photo_data_recv(QtCore.QThread): 
-    '''안드로이드에서 전송한 사진을 다운로드 후 유사도 측정 후 매칭 여부에 따라 피클파일 추가'''
+    '''Measure the similarity of pictures received from the app'''
     #parent = MainWidget을 상속 받음.
     def __init__(self, parent = None):
         super(Photo_data_recv, self).__init__(parent)
 
     def run(self):
-        file_list = new_list = delete_list = []
+        file_list, new_list, delete_list = [], [], []
         while True:
             filelist()
             for (root, directories, files) in os.walk(TEMP_PATH):
                 for file in files:
                     if ".jpg" in file:
                         file_list.append(str(file[0:8]))
-            if file_list == []:
-                None
-            else:
+            if not file_list is []:
                 for v in file_list:
                     if v not in new_list:            
                         new_list.append(v)
-                print("신규 학번 : "+ str(new_list))        
+                print("student_list : "+ str(new_list))        
                 for z in new_list:
-                    appsave.app_verify(z)
-                    
+                    App.app_verify(z)
                 user_list()
                 new_list.clear()
                 file_list.clear()
-            
-            delete_list = delete_userlist()     ####
+            delete_list = delete_userlist()
             print(delete_list)
-            if delete_list == []:
-                None
-            else:
+            if not delete_list is []:
                 for i in delete_list:
                     delete_pickle(i)
                 user_list()
             time.sleep(10)
+
 class Ui_MainWindow(object):
     def Late(self):
-        global daylist, weeklist
-        daylist = weeklist = []
+        global day_list, week_list
+        day_list.clear()
+        week_list.clear()
         for i in range(0, 5):
-            abc = datetime.now()
-            cba = datetime(first.year, first.month, first.day, (abc.hour-1))
-            second = cba + timedelta(weeks=i)
-            weeklist.append(second)
-            daylist.append(second.date())
+            now = datetime.now()
+            ymdh = datetime(first.year, first.month, first.day, (now.hour-1))
+            second = ymdh + timedelta(weeks=i)
+            week_list.append(second)
+            day_list.append(second.date())
         try:
-            currlimit = weeklist[daylist.index(curr.date())]
+            currlimit = week_list[day_list.index(curr.date())]
             self.Present_Time.setText("수업 시간 : "+ str(currlimit))
         except:
             self.Present_Time.setText("수업 시간 : None")
             
     def Absent(self):
-        global daylist, weeklist
-        daylist = weeklist = []
+        global day_list, week_list
+        day_list.clear()
+        week_list.clear()
         for i in range(0,5):
-            abc = datetime.now()
-            cba = datetime(first.year, first.month, first.day, (abc.hour-4))
-            second = cba + timedelta(weeks=i)
-            weeklist.append(second)
-            daylist.append(second.date())
+            now = datetime.now()
+            ymdh = datetime(first.year, first.month, first.day, (now.hour-4))
+            second = ymdh + timedelta(weeks=i)
+            week_list.append(second)
+            day_list.append(second.date())
         try:
-            currlimit = weeklist[daylist.index(curr.date())]
+            currlimit = week_list[day_list.index(curr.date())]
             self.Present_Time.setText("수업 시간 : "+ str(currlimit))
         except:
             self.Present_Time.setText("수업 시간 : None")
             
     def Attend(self):
-        global daylist, weeklist
-        daylist = weeklist = []
+        global day_list, week_list
+        day_list.clear()
+        week_list.clear()
         for i in range(0, 5):
-            abc = datetime.now()
-            cba = datetime(first.year, first.month, first.day, (abc.hour+1))
-            second = cba + timedelta(weeks=i)
-            weeklist.append(second)
-            daylist.append(second.date())
+            now = datetime.now()
+            ymdh = datetime(first.year, first.month, first.day, (now.hour+1))
+            second = ymdh + timedelta(weeks=i)
+            week_list.append(second)
+            day_list.append(second.date())
         try:
-            currlimit = weeklist[daylist.index(curr.date())]
+            currlimit = week_list[day_list.index(curr.date())]
             self.Present_Time.setText("수업 시간 : "+ str(currlimit))
         except:
             self.Present_Time.setText("수업 시간 : None")
+            
     def sign_in_window(self):   
         self.window = QtWidgets.QDialog()
         self.ui = Ui_user_sign_in()
         self.ui.setupUi(self.window)
-        self.window.show()#창전환
+        self.window.show()      # 창전환
+        
     def sign_up_window(self):
         self.window = QtWidgets.QDialog()
         self.ui = Ui_user_create()
         self.ui.setupUi(self.window)
-        self.window.show()#창전환
+        self.window.show()      # 창전환
+        
     def delete_user_window(self):
         self.window = QtWidgets.QDialog()
         self.ui = Ui_user_delete()
         self.ui.setupUi(self.window)
-        self.window.show()#창전환
+        self.window.show()      # 창전환
+        
     def face_matching_window(self):
-        global daylist, weeklist
-        lines = [] # 학번 이름이 저장된 리스트
+        global day_list, week_list
+        lines = []      # 학번 이름이 저장된 리스트
         with open(r"Python\DB\User_List.txt") as f: 
             lines = f.readlines()
         lines = [line.rstrip('\n') for line in lines]
-        print("이름:",lines)
+        print("Name :",lines)
         self.window = QtWidgets.QDialog()
-        self.ui = Ui_user_face(daylist, weeklist)
+        self.ui = Ui_user_face(day_list, week_list)
         self.ui.setupUi(self.window)
-        self.window.show()  # 창전환
+        self.window.show()      # 창전환
+        
     def setupUi(self, MainWindow):          
         MainWindow.setObjectName("메인")
         MainWindow.resize(1920, 1080)
@@ -175,10 +178,11 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "메인"))
-        MainWindow.setWindowFlag(QtCore.Qt.FramelessWindowHint) #시연할때만
+        MainWindow.setWindowFlag(QtCore.Qt.FramelessWindowHint)
         self.User_del.setText(_translate("MainWindow", "사용자 삭제"))  
         self.User_create.setText(_translate("MainWindow", "사용자 등록"))
         self.User_face.setText(_translate("MainWindow", "출석하기"))
@@ -198,7 +202,6 @@ class Ui_MainWindow(object):
         self.Logo.setPixmap(Logo)
 
 if __name__ == "__main__":
-    import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     File = open(r".\Python\Ui\Devsion.qss", 'r')
