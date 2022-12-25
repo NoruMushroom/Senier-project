@@ -1,6 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import cv2
-from Face_detection import *
 from socket import *
 from choose_student_name import Ui_choose_student_name
 from datetime import timedelta, datetime
@@ -8,18 +7,16 @@ from DB.attendance import atd_upload
 from Temp_error import Ui_Temp_error
 import time
 from retinaface import RetinaFace
-from deepface import DeepFace
 import numpy as np
-from PIL import Image
-from keras.preprocessing.image import img_to_array
-import tensorflow as tf
-import matplotlib.pyplot as plt
+import Option
+import os
+from Face.Face_detection import *
 #2 지울거
 #1 체온       
 #1 체온
 try:
-    ip = Final.HOST
-    port = Final.PORT
+    ip = Option.HOST
+    port = Option.PORT
     clientSocket = socket(AF_INET, SOCK_STREAM)    
     clientSocket.connect((ip,port))
 except TimeoutError as e:
@@ -81,8 +78,8 @@ class FrameGrabber(QtCore.QThread):
         super(FrameGrabber, self).__init__(parent)
         self.cap = cv2.VideoCapture(0 + cv2.CAP_DSHOW)
         self.star = time.time()
-        self.DB_Path =  Final.Mask_DB_Path
-        self.default_PKL = Final.PKL_Mask_Path
+        self.DB_Path =  Option.Mask_DB_Path
+        self.default_PKL = Option.PKL_Mask_Path
         self.score = 0
     signal = QtCore.pyqtSignal(QtGui.QImage)
     def run(self):
@@ -110,10 +107,10 @@ class FrameGrabber(QtCore.QThread):
                         
                         Face_Area = box[0], box[1], box[2], box[3]
     
-                        pkl = os.path.join(self.DB_Path,Final.pkl )
+                        pkl = os.path.join(self.DB_Path,Option.pkl )
                         StudentID = recognition(image[box[1]: box[3], box[0]:box[2]],pkl ,dddown)
                         start1 = time.time()
-                        if self.DB_Path == Final.Mask_DB_Path:
+                        if self.DB_Path == Option.Mask_DB_Path:
                             end1= time.time() - start1
                             while True and end1 < 3:
                                 from eye_blink import eye_blink
@@ -299,12 +296,12 @@ class Ui_user_face(object):
             self.window.show()#창전환
     def swap(self):
         global dddown
-        if self.grabber.DB_Path == Final.Mask_DB_Path:
+        if self.grabber.DB_Path == Option.Mask_DB_Path:
             self.Change.setText("2차 인증(마스크 X)")
-            self.grabber.DB_Path = Final.NoMask_DB_Path
+            self.grabber.DB_Path = Option.NoMask_DB_Path
             dddown = 0.45             
         else:
-            self.grabber.DB_Path = Final.Mask_DB_Path
+            self.grabber.DB_Path = Option.Mask_DB_Path
             self.Change.setText("2차 인증(마스크 O)")
             dddown = 0.5            
         print(self.grabber.DB_Path)

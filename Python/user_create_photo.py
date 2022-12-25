@@ -1,13 +1,10 @@
-from tkinter import Frame
 from PyQt5 import QtCore, QtGui, QtWidgets
-import cv2
-import re
-import numpy as np
 import os
-from sqlalchemy import false
-from Face_detection import *
-from __default__ import NoMask_DB_Path
+from Face import *
+from Option import NOMASK_PATH
 from retinaface import RetinaFace
+import cv2
+import pickle
 embedding_list = []
 
 class FrameGrabber(QtCore.QThread):
@@ -124,7 +121,7 @@ class Ui_user_photo(object):
             global embedding_list
             for i in embedding_list: # 파일 피클 파일 생성
                 embedding = ArcFace(i)
-            with open(default.PKL_NoMask_Path ,"ab") as t:
+            with open(Option.PKL_NoMask_Path ,"ab") as t:
                 pickle.dump([i, embedding], t)
             save_masked_image(embedding_list)
             self.grabber.stop()

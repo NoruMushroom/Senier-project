@@ -11,6 +11,7 @@ import os
 cap = cv2.VideoCapture(0)
 start = time.time()
 def recognition(img):
+    print('recognition')
     Rdict = DeepFace.find(img_path=img, 
                           db_path='D:/Mask_Project/user_img/NoMask',
                           enforce_detection=False,

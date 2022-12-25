@@ -5,6 +5,7 @@ __add__ = ["Emotion",
 from . import Emotion
 from . import Eye_blink
 from . import Face_detection
+import Option
 
 mask_file_patha = ""
 embedding_list_No = []

@@ -6,17 +6,17 @@ from user_create_photo import Ui_user_photo
 from DB.register import register
 from DB.user_list import user_list
 from sqlalchemy import false
-from Face_detection import *
-from __default__ import *
+from Face import *
+import Option
 import os
 import shutil
 
 class Ui_user_create(object):
     def Back_btn(self, ID, Dialog):
         if ID:
-            if os.path.isdir(default.NoMask_DB_Path +"/"+ID) and os.path.isdir(default.Mask_DB_Path +"/"+ID) :
-                shutil.rmtree(default.NoMask_DB_Path +"/"+ID)
-                shutil.rmtree(default.Mask_DB_Path +"/"+ID)
+            if os.path.isdir(Option.NoMask_DB_Path +"/"+ID) and os.path.isdir(Option.Mask_DB_Path +"/"+ID) :
+                shutil.rmtree(Option.NoMask_DB_Path +"/"+ID)
+                shutil.rmtree(Option.Mask_DB_Path +"/"+ID)
                 with open(r"Python\user_img\User_Register.txt", "w") as f: f.write("")  
                 Dialog.close()
         else:
@@ -43,7 +43,7 @@ class Ui_user_create(object):
             for i in embedding_list:
                 embedding = ArcFace(img_path = i, face = True)
                 
-            with open(default.PKL_NoMask_Path ,"ab") as train:
+            with open(Option.PKL_NoMask_Path ,"ab") as train:
                 pickle.dump([i, embedding], train)
             save_masked_image(embedding_list,face=True)
                 

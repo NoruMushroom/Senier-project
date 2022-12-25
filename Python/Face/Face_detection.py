@@ -3,13 +3,13 @@ from retinaface.commons import postprocess
 from deepface.commons import functions
 import os
 import pickle
-from .. import Option
+
 import cv2
 import numpy as np
 from keras_preprocessing import image
 import pandas as pd
 from deepface.commons import distance
-import Face
+import Option
 
 def face_box(img_path):
     read_img = cv2.imread(img_path) if type(img_path)!=np.ndarray else img_path
@@ -129,6 +129,7 @@ def save_list(path:str):
                 ff.write(path +'\n') 
              
 def exists_Pickle(): 
+    print('exists_Pickle')
     ''' Create a pickle file if it does not exist '''
     if not os.path.exists(Option.MASK_PKL):
         with open(Option.MASK_PKL,"wb") as a:
