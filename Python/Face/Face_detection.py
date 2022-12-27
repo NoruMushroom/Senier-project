@@ -3,15 +3,19 @@ from retinaface.commons import postprocess
 from deepface.commons import functions
 import os
 import pickle
-
 import cv2
 import numpy as np
 from keras_preprocessing import image
 import pandas as pd
 from deepface.commons import distance
 import Option
+from datetime import datetime
+import sys
+
 
 def face_box(img_path):
+    print(sys._getframe().f_code.co_name , str(datetime.now()))
+    
     read_img = cv2.imread(img_path) if type(img_path)!=np.ndarray else img_path
     img = cv2.cvtColor(read_img, cv2.COLOR_BGR2RGB)
     faces = RetinaFace.detect_faces(img)
@@ -32,6 +36,8 @@ def ArcFace(img_path, face = False):
     img_path : img_path or image
     face : Face detection
     '''
+    print(sys._getframe().f_code.co_name , str(datetime.now()))
+    
     from deepface.basemodels import ArcFace
     model = ArcFace.loadModel()
     read_img = cv2.imread(img_path) if type(img_path)!=np.ndarray else img_path
@@ -71,32 +77,38 @@ def ArcFace(img_path, face = False):
     return embedding
            
 def save_pickle():
-    '''Add the latest face image'''
-    print("파일 추가중입니다.")
-
-    with open("NoMask.txt") as f:
-        lines = f.readlines()
-    lines = [line.rstrip('\n') for line in lines]
-    for i in lines:
-        embedding = ArcFace(i)
-    with open(Option.NOMASK_PKL,"ab") as train:
-        pickle.dump([i, embedding], train)
     
-    with open("Mask.txt") as f:
+    '''Add the latest face image'''
+    print(sys._getframe().f_code.co_name , str(datetime.now()))
+    
+    with open(r"Python\user_img\NoMask.txt","r") as f:
         lines = f.readlines()
-    lines = [line.rstrip('\n') for line in lines]
-    for i in lines:
-        embedding = ArcFace(i)
+    with open(Option.NOMASK_PKL,"ab") as train:
+        lines = [line.rstrip('\n') for line in lines]
+        if lines != []:
+            for i in lines:
+                embedding = ArcFace(i)
+                pickle.dump([i, embedding], train)
+                
+    with open(r"Python\user_img\Mask.txt","r") as f:
+        lines = f.readlines()
     with open(Option.MASK_PKL,"ab") as train:
-        pickle.dump([i, embedding], train)    
-            
-    print("파일 추가 완료")
-    with open('NoMask.txt','w',encoding='UTF-8') as f:
+        lines = [line.rstrip('\n') for line in lines]
+        if lines != []:
+            for i in lines:
+                embedding = ArcFace(i)
+                pickle.dump([i, embedding], train)  
+                  
+    with open(r"Python\user_img\NoMask.txt",'w',encoding='UTF-8') as f:
             pass
-    with open('Mask.txt','w',encoding='UTF-8') as f:
+    with open(r"Python\user_img\Mask.txt",'w',encoding='UTF-8') as f:
             pass
         
+        
 def save_image(id, img, img_db):
+
+    print(sys._getframe().f_code.co_name , str(datetime.now()))
+    
     path = os.path.join(img_db,id)
     save_path = ""
     for (root, directories, files) in os.walk(path):
@@ -121,23 +133,27 @@ def save_image(id, img, img_db):
         
 def save_list(path:str):
     ''' Insert attendance completed face image '''
+    
+    print(sys._getframe().f_code.co_name , str(datetime.now()))
+    
     if "NoMask" in path:
-        with open('NoMask.txt','a',encoding='UTF-8') as f:
+        with open(r"Python\user_img\NoMask.txt",'a',encoding='UTF-8') as f:
                 f.write(path +'\n')
     else: 
-        with open('Mask.txt','a',encoding='UTF-8') as ff:
+        with open(r"Python\user_img\Mask.txt",'a',encoding='UTF-8') as ff:
                 ff.write(path +'\n') 
              
 def exists_Pickle(): 
-    print('exists_Pickle')
     ''' Create a pickle file if it does not exist '''
+    
+    print(sys._getframe().f_code.co_name , str(datetime.now()))
+    
     if not os.path.exists(Option.MASK_PKL):
         with open(Option.MASK_PKL,"wb") as a:
-            pickle.dump([], a)
+            pass
     if not os.path.exists(Option.NOMASK_PKL):
         with open(Option.NOMASK_PKL,"wb") as b:
-            pickle.dump([], b)
-
+            pass
             
 def save_masked_image(path_list:list,face = False):
     '''
@@ -145,7 +161,8 @@ def save_masked_image(path_list:list,face = False):
     
     list = ```image path(Just the face)```
     '''
-
+    print(sys._getframe().f_code.co_name , str(datetime.now()))
+    
     for path in path_list:    
         maskedImagePath = ""
         studentID = os.path.basename(path)[0:8]
@@ -191,22 +208,25 @@ def save_masked_image(path_list:list,face = False):
         
         
         
-def recognition(img_path, pkl_file, reference_value):
+def recognition(img_path: str, pkl_file:str, reference_value: float):
+    
+    print(sys._getframe().f_code.co_name , str(datetime.now()))
+    
     read_img = cv2.imread(img_path) if type(img_path)!=np.ndarray else img_path
     img = cv2.cvtColor(read_img, cv2.COLOR_BGR2RGB)
     target_embedding = ArcFace(img)
-
-    pkl_data = []
-
+    pkl_data = list()
 
     with open(pkl_file,'rb') as f:
         while True:
-            try:
-                pkl_data.append(pickle.load(f))
+            try: pkl_data.append(pickle.load(f))
             except:
                 f.close()
                 break
             
+    if pkl_data == []:
+        return None
+        
     df = pd.DataFrame(columns=['StudentID', 'distance'])
     test = []
     for i in pkl_data:
@@ -240,4 +260,4 @@ def recognition(img_path, pkl_file, reference_value):
     
     return rating[0][:8]
 
-exists_Pickle()
+

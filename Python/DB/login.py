@@ -21,8 +21,8 @@ def login(id, password):
             a = row[0]  
     except mysql.connector.Error as error:
         print("연결 실패 {}".format(error))
-
-    finally:
+        return False
+    else:
         if (connection.is_connected()):
             cursor.close()
             connection.close()

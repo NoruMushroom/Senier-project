@@ -3,18 +3,18 @@ from DB.user_list import user_list
 from user_delete_error import Ui_user_delete_error
 from user_delete_complete import Ui_user_delete_complete
 from DB.delete import user_remove
-import __default__ as default
+import Option
 import shutil 
 import os
 import pickle
 
 class Ui_user_delete(object):
     def information_remove(self, name, Dialog):
-        dir_path = [default.Mask_DB_Path,default.NoMask_DB_Path]
+        dir_path = [Option.Mask_DB_Path,Option.NoMask_DB_Path]
         for Dir in dir_path:
             a = []
             c = []
-            pkl_file = os.path.join(Dir, default.pkl)
+            pkl_file = os.path.join(Dir, Option.pkl)
             with open(pkl_file ,"rb") as rd:
                 data = pickle.load(rd)
                 while 1:

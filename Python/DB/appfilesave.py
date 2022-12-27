@@ -6,13 +6,10 @@ import mysql.connector
 from deepface.commons import distance
 import os
 import cv2
-import re
 import pickle
-import numpy as np
-import __default__ as default
+import Option
 import shutil
-
-from ..Face_detection import *
+from Face import *
 
 
 
@@ -21,7 +18,7 @@ from ..Face_detection import *
 def app_verify(Name):                               # 수정 5/23
     print("매칭 중 : " + str(Name))
     app_file_list = []
-    for (root, directories, files) in os.walk(default.Photo_Path):
+    for (root, directories, files) in os.walk(Option.Photo_Path):
                                 for file in files:
                                     if str(Name) in file:
                                         file_path = os.path.join(root, file)
@@ -47,7 +44,7 @@ def app_verify(Name):                               # 수정 5/23
         print("다 맞음")
         pickle_upload(app_file_list, Name)        # 사진 저장
         try:
-            os.rmdir(default.Photo_Path +"/"+ Name)
+            os.rmdir(Option.Photo_Path +"/"+ Name)
         except OSError:
             print("디렉터리가 비어 있지 않습니다")    
         try:
@@ -78,7 +75,7 @@ def app_verify(Name):                               # 수정 5/23
             if os.path.isfile(k):
                 os.remove(k)
         try:
-            os.rmdir(default.Photo_Path +"/"+ Name)
+            os.rmdir(Option.Photo_Path +"/"+ Name)
         except OSError:
             print("디렉터리가 비어 있지 않습니다")        
         print("delete :" + str(app_file_list))
@@ -114,8 +111,8 @@ def pickle_upload(img_list, Name):
     Name : StudentID
     '''
     
-    Save_Folder_Path = default.NoMask_DB_Path + "/" + str(Name)         # 폴더 없으면 생성
-    Save_MaFolder_Path = default.Mask_DB_Path + "/" + str(Name)
+    Save_Folder_Path = Option.NoMask_DB_Path + "/" + str(Name)         # 폴더 없으면 생성
+    Save_MaFolder_Path = Option.Mask_DB_Path + "/" + str(Name)
     
     try:
         if not os.path.exists(Save_Folder_Path):
@@ -156,7 +153,7 @@ def pickle_upload(img_list, Name):
     
     for i in b:
         embedding = ArcFace(i)
-        with open(default.PKL_NoMask_Path, "ab") as p:
+        with open(Option.PKL_NoMask_Path, "ab") as p:
             pickle.dump([i, embedding], p)
     save_masked_image(b)                      # mask 임베딩
 

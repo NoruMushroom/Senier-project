@@ -1,7 +1,7 @@
 import requests
 from mysql.connector import Error
 import pickle
-import __default__ as default
+import Option
 import shutil
 import os
 import urllib.request
@@ -33,26 +33,29 @@ def filelist():
         print(x)
     except:
         print("요청 오류")
-    for i in range(0, len(x)):
-        if(not os.path.isdir("C:/AHard/Project/user_img/Temp/"+x[i])):
-            os.mkdir("C:/AHard/Project/user_img/Temp/"+x[i])
         
-    if(len(x) != 0):
-        for i in range(0, len(x)):
-            srv_img(x[i], "C:/AHard/Project/user_img/Temp")
-        
-        try:
-            url = 'http://39.124.26.132/Py_php/delete.php'
-            
-            for i in range(0, len(x)):
-                name = {'uname':x[i]}
-                r = requests.post(url, data=name)               
-        except:
-            print("요청 오류")
     else:
-        print("서버에 파일이 없습니다.")
+        for i in range(0, len(x)):
+            if(not os.path.isdir("C:/AHard/Project/user_img/Temp/"+x[i])):
+                os.mkdir("C:/AHard/Project/user_img/Temp/"+x[i])
+        
+        if(len(x) != 0):
+            for i in range(0, len(x)):
+                srv_img(x[i], "C:/AHard/Project/user_img/Temp")
+            
+            try:
+                url = 'http://39.124.26.132/Py_php/delete.php'
+                
+                for i in range(0, len(x)):
+                    name = {'uname':x[i]}
+                    r = requests.post(url, data=name)               
+            except:
+                print("요청 오류")
+        else:
+            print("서버에 파일이 없습니다.")
         
 def delete_userlist():
+    print('delete_userlist')
     try:
         url = 'http://39.124.26.132/Py_php/stdid.php'
         r = requests.post(url)
@@ -61,6 +64,7 @@ def delete_userlist():
         del x[0:2]
     except:
         print("요청 오류")
+        return []
     if(len(x) != 0):
         try:
             url = 'http://39.124.26.132/Py_php/stdiddelte.php'
@@ -68,14 +72,15 @@ def delete_userlist():
             for i in range(0, len(x)):
                 name = {'uname':x[i]}
                 r = requests.post(url, data=name)
-            
-                
+            return x
         except:
             print("요청 오류")
-    return(x)
+            return []
+        
+    
 
 def delete_pickle(name):
-        dir_path = [default.Mask_DB_Path,default.NoMask_DB_Path]
+        dir_path = [Option.Mask_DB_Path,Option.NoMask_DB_Path]
         for Dir in dir_path:
             a = []
             c = []

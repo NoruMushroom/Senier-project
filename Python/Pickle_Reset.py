@@ -5,9 +5,9 @@ import time
 
 def reset():
     with open(default.PKL_Mask_Path,"wb") as a:
-        pickle.dump([], a)
+        pass
     with open(default.PKL_NoMask_Path,"wb") as b:
-        pickle.dump([], b)
+        pass
 
     a = [default.Mask_DB_Path, default.NoMask_DB_Path]
     for i in a:

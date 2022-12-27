@@ -63,8 +63,7 @@ def eye_blink(img, box, landmarks):
     
     x_r /= 255
     x_l /= 255
-
-    eye_model = load_model(r'./model/eye_blink_model.h5')
+    eye_model = load_model(r'./Python\Face\model\eye_blink_model.h5')
     
     left = eye_model.predict(x_l)
     right = eye_model.predict(x_r)

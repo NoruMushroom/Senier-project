@@ -8,26 +8,35 @@ from Temp_error import Ui_Temp_error
 import time
 from retinaface import RetinaFace
 import numpy as np
-import Option
+from Option import *
 import os
-from Face.Face_detection import *
-#2 지울거
-#1 체온       
-#1 체온
+from Face import *
+from deepface.commons import distance
+import sys
+
 try:
-    ip = Option.HOST
-    port = Option.PORT
     clientSocket = socket(AF_INET, SOCK_STREAM)    
-    clientSocket.connect((ip,port))
+    clientSocket.connect((HOST,PORT))
+    Thread_Pause = True
+    
 except TimeoutError as e:
     print(e)
+    Thread_Pause = False
+except ConnectionRefusedError as e:
+    print(e)
+    Thread_Pause = False
+    
 objects = ('angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral')                  
 save_img = cameraimg = None
 Face_Area = distest = []
 send_data = recv_data = StudentID = None
 dddown = 9                     
-Thread_Pause = True
 curtime = [datetime.now().month,datetime.now().day]
+    
+
+
+
+
 class Temp_data_send(QtCore.QThread):
     #parent = MainWidget을 상속 받음.
     def __init__(self, parent = None):
@@ -40,7 +49,9 @@ class Temp_data_send(QtCore.QThread):
                 #1 체온
                 send_data = str(Face_Area)    
                 print(str(Face_Area))
-                clientSocket.send(send_data.encode())              
+                clientSocket.send(send_data.encode())  
+                print()
+                print(clientSocket.send(send_data.encode()))            
                 time.sleep(0.5)
 class Temp_data_recv(QtCore.QThread):
     #parent = MainWidget을 상속 받음.
@@ -78,8 +89,8 @@ class FrameGrabber(QtCore.QThread):
         super(FrameGrabber, self).__init__(parent)
         self.cap = cv2.VideoCapture(0 + cv2.CAP_DSHOW)
         self.star = time.time()
-        self.DB_Path =  Option.Mask_DB_Path
-        self.default_PKL = Option.PKL_Mask_Path
+        self.DB_Path =  MASK_PATH
+        self.default_PKL = MASK_PKL
         self.score = 0
     signal = QtCore.pyqtSignal(QtGui.QImage)
     def run(self):
@@ -90,14 +101,13 @@ class FrameGrabber(QtCore.QThread):
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)
         
         while True:
-            end = time.time()
+            end = time.time() - self.star
             ret, img = self.cap.read()
             if ret:
                 image = img
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                faces = RetinaFace.detect_faces(img)
-
-                if end > 3:
+                if end > 5:
+                    faces = RetinaFace.detect_faces(img)
                     if type(faces) == dict:
                         box, landmarks, self.score = (faces['face_1']['facial_area'],
                                                       faces['face_1']['landmarks'],
@@ -107,13 +117,13 @@ class FrameGrabber(QtCore.QThread):
                         
                         Face_Area = box[0], box[1], box[2], box[3]
     
-                        pkl = os.path.join(self.DB_Path,Option.pkl )
-                        StudentID = recognition(image[box[1]: box[3], box[0]:box[2]],pkl ,dddown)
+                        pkl = os.path.join(self.DB_Path, PKL)
+                        StudentID = Face_detection.recognition(image[box[1]: box[3], box[0]:box[2]],pkl ,dddown)
                         start1 = time.time()
-                        if self.DB_Path == Option.Mask_DB_Path:
+                        if self.DB_Path == MASK_PATH:       # Mask
                             end1= time.time() - start1
-                            while True and end1 < 3:
-                                from eye_blink import eye_blink
+                            print("StudentID :",StudentID)
+                            while True and end1 < 3 and StudentID != None:
                                 ret, img1 = self.cap.read()
                                 img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
                                 faces = RetinaFace.detect_faces(img1)
@@ -121,17 +131,16 @@ class FrameGrabber(QtCore.QThread):
                                     box, landmarks, self.score = (faces['face_1']['facial_area'],
                                                                  faces['face_1']['landmarks'],
                                                                  faces['face_1']['score'])
-                                    left,right ,x = eye_blink(img1, box, landmarks)
+                                    left,right ,x = Eye_blink.eye_blink(img1, box, landmarks)
                                     if left <= 0.5 and right <= 0.5:
-                                        dis = distance.findCosineDistance(ArcFace(image,True)), ArcFace(img1,True)
+                                        dis = distance.findCosineDistance(Face_detection.ArcFace(image,True)), Face_detection.ArcFace(img1,True)
                                         if dis < 0.68:
                                             print("학번은 : " + str(StudentID))
-                                            save_image(StudentID, image[box[1]: box[3], box[0]:box[2]], self.DB_Path)
+                                            Face_detection.save_image(StudentID, image[box[1]: box[3], box[0]:box[2]], self.DB_Path)
                                         
-                        else:
+                        else:                               # NoMask
                             end1= time.time() - start1
-                            while True and end1 < 3:
-                                from emotion import emotion
+                            while True and end1 < 3 and StudentID != None:
                                 ret, img1 = self.cap.read()
                                 img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
                                 faces = RetinaFace.detect_faces(img1)
@@ -139,24 +148,21 @@ class FrameGrabber(QtCore.QThread):
                                     box, landmarks, self.score = (faces['face_1']['facial_area'],
                                                                  faces['face_1']['landmarks'],
                                                                  faces['face_1']['score'])
-                                    custom ,x= emotion(img1,box)
+                                    custom ,x= Emotion.emotion(img1,box)
                                     emo = np.where(custom[0] == max(custom[0]))
                                     print("Emotion : " +objects[emo[0][0]])
                                     print(custom[0]) 
                                     if 'neutral' != objects[emo[0][0]]:
-                                        dis = distance.findCosineDistance(ArcFace(image,True)), ArcFace(img1,True)
+                                        dis = distance.findCosineDistance(Face_detection.ArcFace(image,True)), Face_detection.ArcFace(img1,True)
                                         if dis < 0.68:
                                             print("학번은 : " + str(StudentID))
-                                            save_image(StudentID, image[box[1]: box[3], box[0]:box[2]], self.DB_Path)
+                                            Face_detection.save_image(StudentID, image[box[1]: box[3], box[0]:box[2]], self.DB_Path)
                                         
                         #print(cameraimg)
                         self.star = time.time()
                     else: 
                         box, landmarks, self.score = None, None, 0
-
-                        
                 
-                        
             try:
                 image = QtGui.QImage(img, img.shape[1], img.shape[0], QtGui.QImage.Format_RGB888)
                 self.signal.emit(image)
@@ -164,7 +170,7 @@ class FrameGrabber(QtCore.QThread):
                 continue
            
     def stop(self):
-        save_pickle()
+        Face_detection.save_pickle()
         self.cap.release()
         cv2.destroyAllWindows()
 class Face_Status(QtCore.QThread):
@@ -244,7 +250,6 @@ class Ui_user_face(object):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "출석"))
         self.Temp.setText(_translate("Dialog", "체온 :" + " " + str(recv_data)))
-        #print(recv_data)
         self.Name.setText(_translate("Dialog", "학번 :"))
         self.Attend.setText(_translate("Dialog", "출석하기"))
         self.Back.setText(_translate("Dialog", "돌아가기"))
@@ -296,12 +301,12 @@ class Ui_user_face(object):
             self.window.show()#창전환
     def swap(self):
         global dddown
-        if self.grabber.DB_Path == Option.Mask_DB_Path:
+        if self.grabber.DB_Path == MASK_PATH:
             self.Change.setText("2차 인증(마스크 X)")
-            self.grabber.DB_Path = Option.NoMask_DB_Path
+            self.grabber.DB_Path = NOMASK_PATH
             dddown = 0.45             
         else:
-            self.grabber.DB_Path = Option.Mask_DB_Path
+            self.grabber.DB_Path = MASK_PATH
             self.Change.setText("2차 인증(마스크 O)")
             dddown = 0.5            
         print(self.grabber.DB_Path)
@@ -313,7 +318,7 @@ class Ui_user_face(object):
 
 
 if __name__ == "__main__":
-    import sys
+    
     app = QtWidgets.QApplication(sys.argv)
     Dialog = QtWidgets.QDialog()
     ui = Ui_user_face(curtime[0],curtime[1])

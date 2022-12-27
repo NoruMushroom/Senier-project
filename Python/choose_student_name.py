@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from Attend_List import Ui_User_Attend_List
 import cv2
-from Face_detection import *
+from Face import *
 
 
 class Ui_choose_student_name(object):

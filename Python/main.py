@@ -3,7 +3,7 @@ from PyQt5.QtGui import *
 import time
 import sys
 import os
-from Constant_Variable import *
+from Option import *
 from user_create import Ui_user_create
 from user_delete import Ui_user_delete
 from user_face import Ui_user_face
@@ -25,8 +25,10 @@ for i in range(0, 5):
     day_list.append(second.date())
 try:
     currlimit = week_list[day_list.index(curr.date())]
-except:
+except ValueError as e:
     currlimit = None
+    print('main except', str(datetime.now()), e)
+    
         
 class Photo_data_recv(QtCore.QThread): 
     '''Measure the similarity of pictures received from the app'''
@@ -35,30 +37,30 @@ class Photo_data_recv(QtCore.QThread):
         super(Photo_data_recv, self).__init__(parent)
 
     def run(self):
-        file_list, new_list, delete_list = [], [], []
         while True:
+            file_list, new_list, delete_list = [], [], []
             filelist()
             for (root, directories, files) in os.walk(TEMP_PATH):
                 for file in files:
                     if ".jpg" in file:
                         file_list.append(str(file[0:8]))
             if not file_list is []:
-                for v in file_list:
-                    if v not in new_list:            
-                        new_list.append(v)
-                print("student_list : "+ str(new_list))        
-                for z in new_list:
-                    App.app_verify(z)
+                for id in file_list:
+                    if id not in new_list:            
+                        new_list.append(id)
+                print("new_list : "+ str(new_list)) 
+                       
+                for new_id in new_list:
+                    App.app_verify(new_id)
                 user_list()
-                new_list.clear()
-                file_list.clear()
+                
             delete_list = delete_userlist()
-            print(delete_list)
-            if not delete_list is []:
-                for i in delete_list:
-                    delete_pickle(i)
-                user_list()
+            print("delete_list:", delete_list)
+            for del_id in delete_list:
+                delete_pickle(del_id)
+            user_list()
             time.sleep(10)
+            
 
 class Ui_MainWindow(object):
     def Late(self):
