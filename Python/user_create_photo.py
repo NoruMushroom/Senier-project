@@ -1,12 +1,13 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import os
 from Face import *
-from Option import NOMASK_PATH
+from Option import *
 from retinaface import RetinaFace
+from retinaface.commons import postprocess
 import cv2
 import pickle
-embedding_list = []
-
+import sys
+from datetime import timedelta, datetime
 class FrameGrabber(QtCore.QThread):
     signal = QtCore.pyqtSignal(QtGui.QImage)
     def __init__(self, parent=None):
@@ -45,6 +46,7 @@ class FrameGrabber(QtCore.QThread):
 class Ui_user_photo(object):
     def __init__(self,message):
         self.name = message
+        self.embedding_list = []
     def setupUi(self, Dialog):
         Dialog.setObjectName("사진 촬영")
         Dialog.resize(660, 550)
@@ -56,10 +58,10 @@ class Ui_user_photo(object):
         self.Photo.setGeometry(QtCore.QRect(10, 500, 640, 40))
         self.Photo.setObjectName("Photo")
         self.Photo.clicked.connect(lambda : self.Take_photo(self.name, self.grabber.save_file, self.grabber.score, Dialog,self.grabber.face))
-        #self.Back = QtWidgets.QPushButton(Dialog)
-        #self.Back.setGeometry(QtCore.QRect(335, 500, 315, 40))
-        #self.Back.setObjectName("Back")
-        #self.Back.clicked.connect(lambda : self.close_video(Dialog, self.name))
+        #self.Back = QtWidgets.QPushButton(Dialog)                                  #
+        #self.Back.setGeometry(QtCore.QRect(335, 500, 315, 40))                     #
+        #self.Back.setObjectName("Back")                                            #
+        #self.Back.clicked.connect(lambda : self.close_video(Dialog, self.name))    #
         self.Video = QtWidgets.QLabel(Dialog)
         self.Video.setGeometry(QtCore.QRect(10, 10, 640, 480))
         self.Video.setText("")
@@ -72,12 +74,12 @@ class Ui_user_photo(object):
         Dialog.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)
         Dialog.setWindowTitle(_translate("Dialog", "사진 촬영"))
         self.Photo.setText(_translate("Dialog", "사진 촬영" + "("+ str(self.count) + "장" + ")"))
-        #self.Back.setText(_translate("Dialog", "돌아가기"))
+        #self.Back.setText(_translate("Dialog", "돌아가기"))                         #
 
-    def Take_photo(self, StudentID, frame, score, Dialog,face  ):
+    def Take_photo(self, StudentID, frame, score, Dialog, face):
+        print(sys._getframe().f_code.co_name , str(datetime.now()))
         file_path = ""
-        global embedding_list    
-        studentid_path = os.path.join(NoMask_DB_Path, str(StudentID))
+        studentid_path = os.path.join(NOMASK_PATH, str(StudentID))
         if score > 0.9:
             for (root, directories, files) in os.walk(studentid_path):
                 for file in files:
@@ -91,12 +93,12 @@ class Ui_user_photo(object):
             number = int(number[-7:-4]) + 1
             number = format(number, '03')
             savePath = os.path.join(os.path.dirname(file_path),
-                                    os.path.basename(file_path)[0:8] + "_" +
-                                    number + os.path.splitext(file_path)[1])
+                                     os.path.basename(file_path)[0:8] + "_" +
+                                     number + os.path.splitext(file_path)[1])
             
             savePath = savePath.replace("\\", "/")
             
-            embedding_list.append(savePath)
+            self.embedding_list.append(savePath)
             box, landmarks,= (face['facial_area'],face['landmarks'],)
             frame = postprocess.alignment_procedure(frame, landmarks['right_eye'],
                                                     landmarks['left_eye'],
@@ -115,17 +117,10 @@ class Ui_user_photo(object):
 
     def updateFrame(self, image):
         self.Video.setPixmap(QtGui.QPixmap.fromImage(image))
-    def close_video(self,Dialog,StudentID):
+    def close_video(self, Dialog, StudentID):
         if self.count == 4:
-            exists_Pickle()
-            global embedding_list
-            for i in embedding_list: # 파일 피클 파일 생성
-                embedding = ArcFace(i)
-            with open(Option.PKL_NoMask_Path ,"ab") as t:
-                pickle.dump([i, embedding], t)
-            save_masked_image(embedding_list)
             self.grabber.stop()
-            embedding_list = []
+            self.embedding_list = []
             Dialog.close()
         self.count = self.count + 1
         self.Photo.setText("사진 촬영" + "("+ str(self.count) + "장" + ")")

@@ -5,23 +5,27 @@ from user_create_error import Ui_user_error
 from user_create_photo import Ui_user_photo
 from DB.register import register
 from DB.user_list import user_list
-from sqlalchemy import false
 from Face import *
-import Option
+from Option import *
 import os
 import shutil
-
+import pickle
+import sys
+from datetime import timedelta, datetime
 class Ui_user_create(object):
     def Back_btn(self, ID, Dialog):
+        print(sys._getframe().f_code.co_name , str(datetime.now()))
         if ID:
-            if os.path.isdir(Option.NoMask_DB_Path +"/"+ID) and os.path.isdir(Option.Mask_DB_Path +"/"+ID) :
-                shutil.rmtree(Option.NoMask_DB_Path +"/"+ID)
-                shutil.rmtree(Option.Mask_DB_Path +"/"+ID)
-                with open(r"Python\user_img\User_Register.txt", "w") as f: f.write("")  
-                Dialog.close()
+            if os.path.isdir(NOMASK_PATH +"/"+ID): shutil.rmtree(NOMASK_PATH +"/"+ID)
+            if os.path.isdir(MASK_PATH +"/"+ID):   shutil.rmtree(MASK_PATH +"/"+ID)
+            with open(r"Python\user_img\User_Register.txt", "w") as f:
+                f.write("")  
+            Dialog.close()
         else:
             Dialog.close()
     def information_check(self, Dialog):
+        print(sys._getframe().f_code.co_name , str(datetime.now()))
+        
         embedding_list = []
         ID = self.ID.text()
         NAME = self.NAME.text()
@@ -29,27 +33,27 @@ class Ui_user_create(object):
         GRADE = self.Grade.currentText()
         if ID and NAME and PW and GRADE: # 생성
             register(ID,PW,NAME,GRADE)
-            exists_Pickle()
+            Face_detection.exists_Pickle()
             with open(r"Python\user_img\User_Register.txt", "r") as file:
                 line = None
                 while line != '':
                     line = file.readline()
                     line = line.strip('\n')
                     embedding_list.append(line)
-            print(embedding_list)
+            print("embedding_list:", embedding_list)
             del embedding_list[len(embedding_list)-1]
 
             # 파일 피클 파일 생성
             for i in embedding_list:
-                embedding = ArcFace(img_path = i, face = True)
+                embedding = Face_detection.ArcFace(img_path = i, face = True)
+                with open(NOMASK_PKL ,"ab") as train:
+                    pickle.dump([i, embedding], train)
+                Face_detection.save_masked_image(embedding_list,face=True)
                 
-            with open(Option.PKL_NoMask_Path ,"ab") as train:
-                pickle.dump([i, embedding], train)
-            save_masked_image(embedding_list,face=True)
-                
-            embedding_list = []
-            with open(r"Python\user_img\User_Register.txt", "w") as f: f.write("")   
-            user_list()
+            embedding_list.clear()
+            with open(r"Python\user_img\User_Register.txt", "w") as f:
+                f.write("")   
+            user_list(HOST, PORT, USER, PWD)
             self.window = QtWidgets.QDialog()
             self.ui = Ui_user_complete()
             self.ui.setupUi(self.window)
@@ -62,11 +66,12 @@ class Ui_user_create(object):
             self.window.show()
             
     def take_photo(self):
+        print(sys._getframe().f_code.co_name , str(datetime.now()))
         file = self.ID.text()
         if file:
-            if not os.path.exists(os.path.join(NoMask_DB_Path , file)):
-                os.mkdir(os.path.join(NoMask_DB_Path , file))
-                os.mkdir(os.path.join(Mask_DB_Path, file))
+            if not os.path.exists(os.path.join(NOMASK_PATH , file)):
+                os.mkdir(os.path.join(NOMASK_PATH , file))
+                os.mkdir(os.path.join(MASK_PATH, file))
             self.window = QtWidgets.QDialog()
             self.ui = Ui_user_photo(file)
             self.ui.setupUi(self.window)

@@ -21,12 +21,12 @@ def register(id, password, name, grade):
         print("업로드 완료")
 
     except mysql.connector.Error as error:
-        print("업로드 실패")
+        print("register except", error)
         error = str(error)
         if(error == "Error while executing statement: Duplicate entry '" + id + "' for key 'user.PRIMARY'"):
             print("중복된 사용자입니다.")
 
-    finally:
+    else:
         if (connection.is_connected()):
             cursor.close()
             connection.close()
