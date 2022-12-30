@@ -12,24 +12,7 @@ from DB.filelist import *
 from DB.user_list import user_list
 import DB.appfilesave as App
 from datetime import timedelta, datetime
-
-
-week_list, day_list = [], []
-first = ATDATE
-curr = datetime.now()
-user_list(HOST, PORT, USER, PWD)
-
-for i in range(0, 5):
-    second = first + timedelta(weeks = i)
-    week_list.append(second)
-    day_list.append(second.date())
-try:
-    currlimit = week_list[day_list.index(curr.date())]
-except ValueError as e:
-    currlimit = None
-    print('main except', str(datetime.now()), e)
-    
-        
+  
 class Photo_data_recv(QtCore.QThread): 
     '''Measure the similarity of pictures received from the app'''
     #parent = MainWidget을 상속 받음.
@@ -52,62 +35,73 @@ class Photo_data_recv(QtCore.QThread):
                        
                 for new_id in new_list:
                     App.app_verify(new_id)
-                user_list()
+                user_list(HOST, PORT, USER, PWD)
                 
             delete_list = delete_userlist()
             print("delete_list:", delete_list)
             for del_id in delete_list:
                 delete_pickle(del_id)
-            user_list()
+            user_list(HOST, PORT, USER, PWD)
             time.sleep(10)
             
 
 class Ui_MainWindow(object):
+    def __init__(self):
+        self.week_list =[]
+        self.day_list = []
+        self.curr_limit = []
+        for i in range(0, 5):
+            second = ATDATE + timedelta(weeks = i)
+            self.week_list.append(second)
+            self.day_list.append(second.date())
+        try:
+            self.curr_limit = self.week_list[self.day_list.index(datetime.now().date())]
+        except ValueError as e:
+            self.curr_limit = None
+            print('main except', str(datetime.now()), e)
+        
     def Late(self):
-        global day_list, week_list
-        day_list.clear()
-        week_list.clear()
+        self.day_list.clear()
+        self.week_list.clear()
         for i in range(0, 5):
             now = datetime.now()
-            ymdh = datetime(first.year, first.month, first.day, (now.hour-1))
+            ymdh = datetime(ATDATE.year, ATDATE.month, ATDATE.day, (now.hour-1))
             second = ymdh + timedelta(weeks=i)
-            week_list.append(second)
-            day_list.append(second.date())
+            self.week_list.append(second)
+            self.day_list.append(second.date())
         try:
-            currlimit = week_list[day_list.index(curr.date())]
-            self.Present_Time.setText("수업 시간 : "+ str(currlimit))
+            self.curr_limit = self.week_list[self.day_list.index(datetime.now().date())]
+            self.Present_Time.setText("수업 시간 : "+ str(self.curr_limit))
         except:
             self.Present_Time.setText("수업 시간 : None")
             
     def Absent(self):
-        global day_list, week_list
-        day_list.clear()
-        week_list.clear()
+        self.day_list.clear()
+        self.week_list.clear()
         for i in range(0,5):
             now = datetime.now()
-            ymdh = datetime(first.year, first.month, first.day, (now.hour-4))
+            ymdh = datetime(ATDATE.year, ATDATE.month, ATDATE.day, (now.hour-4))
             second = ymdh + timedelta(weeks=i)
-            week_list.append(second)
-            day_list.append(second.date())
+            self.week_list.append(second)
+            self.day_list.append(second.date())
         try:
-            currlimit = week_list[day_list.index(curr.date())]
-            self.Present_Time.setText("수업 시간 : "+ str(currlimit))
+            curr_limit = self.week_list[self.day_list.index(datetime.now().date())]
+            self.Present_Time.setText("수업 시간 : "+ str(curr_limit))
         except:
             self.Present_Time.setText("수업 시간 : None")
             
     def Attend(self):
-        global day_list, week_list
-        day_list.clear()
-        week_list.clear()
+        self.day_list.clear()
+        self.week_list.clear()
         for i in range(0, 5):
             now = datetime.now()
-            ymdh = datetime(first.year, first.month, first.day, (now.hour+1))
+            ymdh = datetime(ATDATE.year, ATDATE.month, ATDATE.day, (now.hour+1))
             second = ymdh + timedelta(weeks=i)
-            week_list.append(second)
-            day_list.append(second.date())
+            self.week_list.append(second)
+            self.day_list.append(second.date())
         try:
-            currlimit = week_list[day_list.index(curr.date())]
-            self.Present_Time.setText("수업 시간 : "+ str(currlimit))
+            curr_limit = self.week_list[self.day_list.index(datetime.now().date())]
+            self.Present_Time.setText("수업 시간 : "+ str(curr_limit))
         except:
             self.Present_Time.setText("수업 시간 : None")
             
@@ -192,7 +186,7 @@ class Ui_MainWindow(object):
         self.Late_Btn.setText(_translate("MainWindow", "지각"))
         self.Absent_Btn.setText(_translate("MainWindow", "결석"))
         self.Attend_Btn.setText(_translate("MainWindow", "출석"))
-        self.Present_Time.setText(_translate("MainWindow", "수업 시간 : "+str(currlimit)))
+        self.Present_Time.setText(_translate("MainWindow", "수업 시간 : "+str(self.curr_limit)))
         self.User_create.clicked.connect(lambda: self.sign_up_window())
         self.User_del.clicked.connect(lambda : self.delete_user_window())
         self.User_face.clicked.connect(lambda : self.face_matching_window())
@@ -204,6 +198,8 @@ class Ui_MainWindow(object):
         self.Logo.setPixmap(Logo)
 
 if __name__ == "__main__":
+    
+    user_list(HOST, PORT, USER, PWD)
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     File = open(r".\Python\Ui\Devsion.qss", 'r')

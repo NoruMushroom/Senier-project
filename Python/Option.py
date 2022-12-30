@@ -1,7 +1,8 @@
 from datetime import datetime
 import os
 
-ATDATE = datetime(2022, 10, 30, 12, 30, 00, 0)            ######
+# datetime(year, month, day, hour, minute, second)
+ATDATE = datetime(2022, 12, 30, 12, 30)                
 USER_PATH = "C:/Users/gikim/Desktop/user_image"
 MASK_PATH = os.path.join(USER_PATH, 'Mask')
 NOMASK_PATH = os.path.join(USER_PATH, 'NoMask')
