@@ -88,7 +88,6 @@ class FrameGrabber(QtCore.QThread):
     def __init__(self, parent=None):
         super(FrameGrabber, self).__init__(parent)
         self.cap = cv2.VideoCapture(0 + cv2.CAP_DSHOW)
-        self.star = time.time()
         self.DB_Path =  MASK_PATH
         self.default_PKL = MASK_PKL
         self.score = 0
@@ -99,9 +98,9 @@ class FrameGrabber(QtCore.QThread):
         
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)
-        
+        start = time.time()
         while True:
-            end = time.time() - self.star
+            end = time.time() - start
             ret, img = self.cap.read()
             if ret:
                 image = img
@@ -114,16 +113,17 @@ class FrameGrabber(QtCore.QThread):
                                                       faces['face_1']['score'])
                         
                                             #cv2.rectangle(img, (box[0], box[1]), (box[2], box[3]), color=(255, 0, 0), thickness=2)
-                        
                         Face_Area = box[0], box[1], box[2], box[3]
-    
                         pkl = os.path.join(self.DB_Path, PKL)
                         StudentID = Face_detection.recognition(image[box[1]: box[3], box[0]:box[2]],pkl ,dddown)
                         start1 = time.time()
+                        
                         if self.DB_Path == MASK_PATH:       # Mask
-                            end1= time.time() - start1
-                            print("StudentID :",StudentID)
-                            while True and end1 < 3 and StudentID != None:
+                            print("MASK mode")
+                            while StudentID != None:
+                                end1= time.time() - start1
+                                if end1 > 3:
+                                    break
                                 ret, img1 = self.cap.read()
                                 img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
                                 faces = RetinaFace.detect_faces(img1)
@@ -132,15 +132,26 @@ class FrameGrabber(QtCore.QThread):
                                                                  faces['face_1']['landmarks'],
                                                                  faces['face_1']['score'])
                                     left,right ,x = Eye_blink.eye_blink(img1, box, landmarks)
+                                    print("eye_blink Mode time :", end1)
+                                    print([left,right])
                                     if left <= 0.5 and right <= 0.5:
-                                        dis = distance.findCosineDistance(Face_detection.ArcFace(image,True)), Face_detection.ArcFace(img1,True)
+                                        dis = distance.findCosineDistance(Face_detection.ArcFace(image,True), Face_detection.ArcFace(img1,True))
                                         if dis < 0.68:
-                                            print("학번은 : " + str(StudentID))
+                                            print("출석 학번은 : " + str(StudentID))
                                             Face_detection.save_image(StudentID, image[box[1]: box[3], box[0]:box[2]], self.DB_Path)
-                                        
+                                try:
+                                    image_view = QtGui.QImage(img1, img1.shape[1], img1.shape[0], QtGui.QImage.Format_RGB888)
+                                    self.signal.emit(image_view)
+                                except:
+                                    continue   
+                                    
+                                
                         else:                               # NoMask
-                            end1= time.time() - start1
-                            while True and end1 < 3 and StudentID != None:
+                            print("NOMASK mode")
+                            while StudentID != None:
+                                end1= time.time() - start1
+                                if end1 > 3:
+                                    break
                                 ret, img1 = self.cap.read()
                                 img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
                                 faces = RetinaFace.detect_faces(img1)
@@ -150,22 +161,26 @@ class FrameGrabber(QtCore.QThread):
                                                                  faces['face_1']['score'])
                                     custom ,x= Emotion.emotion(img1,box)
                                     emo = np.where(custom[0] == max(custom[0]))
-                                    print("Emotion : " +objects[emo[0][0]])
+                                    print("emotion Mode time :", end1)
                                     print(custom[0]) 
                                     if 'neutral' != objects[emo[0][0]]:
-                                        dis = distance.findCosineDistance(Face_detection.ArcFace(image,True)), Face_detection.ArcFace(img1,True)
+                                        dis = distance.findCosineDistance(Face_detection.ArcFace(image,True), Face_detection.ArcFace(img1,True))
                                         if dis < 0.68:
-                                            print("학번은 : " + str(StudentID))
+                                            print("출석 학번은 : " + str(StudentID))
                                             Face_detection.save_image(StudentID, image[box[1]: box[3], box[0]:box[2]], self.DB_Path)
-                                        
-                        #print(cameraimg)
-                        self.star = time.time()
+                                try:
+                                    image_view = QtGui.QImage(img1, img1.shape[1], img1.shape[0], QtGui.QImage.Format_RGB888)
+                                    self.signal.emit(image_view)
+                                except:
+                                    continue     
+                                      
+                        start = time.time()
                     else: 
                         box, landmarks, self.score = None, None, 0
                 
             try:
-                image = QtGui.QImage(img, img.shape[1], img.shape[0], QtGui.QImage.Format_RGB888)
-                self.signal.emit(image)
+                image_view = QtGui.QImage(img, img.shape[1], img.shape[0], QtGui.QImage.Format_RGB888)
+                self.signal.emit(image_view)
             except:
                 continue
            

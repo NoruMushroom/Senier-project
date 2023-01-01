@@ -168,18 +168,18 @@ def save_masked_image(path_list:list,face = False):
         studentID = os.path.basename(path)[0:8]
         img = cv2.imread(path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    if face:
-        faces = RetinaFace.detect_faces(img)
-        if type(faces) == dict:
-            box, landmarks, score = (faces['face_1']['facial_area'],
-                                    faces['face_1']['landmarks'],
-                                    faces['face_1']['score'])
+        if face:
+            faces = RetinaFace.detect_faces(img)
+            if type(faces) == dict:
+                box, landmarks, score = (faces['face_1']['facial_area'],
+                                        faces['face_1']['landmarks'],
+                                        faces['face_1']['score'])
+                
+                img = postprocess.alignment_procedure(img, landmarks['right_eye'],
+                                                    landmarks['left_eye'],
+                                                    landmarks['nose'])
+                img= img[box[1]: box[3], box[0]:box[2]].copy()
             
-            img = postprocess.alignment_procedure(img, landmarks['right_eye'],
-                                                  landmarks['left_eye'],
-                                                  landmarks['nose'])
-            img= img[box[1]: box[3], box[0]:box[2]].copy()
-        
         cv2.rectangle(img, (0, img.shape[0]//2), (img.shape[1],img.shape[0]), color=(255, 255, 255), thickness=-1)
         for (root, directories, files) in os.walk(f"{Option.MASK_PATH}/{studentID}"):
             for file in files:
@@ -196,15 +196,15 @@ def save_masked_image(path_list:list,face = False):
         number = format(number, '03')
         # dir , studentID + _ + number + extension
         savePath = os.path.join(os.path.dirname(maskedImagePath),
-                                 os.path.basename(maskedImagePath)[0:8] + "_" + 
+                                os.path.basename(maskedImagePath)[0:8] + "_" + 
                                 number + os.path.splitext(maskedImagePath)[1])
         savePath = savePath.replace("\\", "/")
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         cv2.imwrite(savePath, img)
         
         embedding = ArcFace(img)
-    with open(Option.MASK_PKL ,"ab") as w:
-        pickle.dump( [savePath,embedding], w)   
+        with open(Option.MASK_PKL ,"ab") as f:
+            pickle.dump( [savePath, embedding], f)   
         
         
         
