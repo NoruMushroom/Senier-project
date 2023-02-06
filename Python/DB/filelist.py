@@ -9,7 +9,7 @@ import urllib.request
 
 def find_len(name):
     user_name = {"uname" : name}
-    r = requests.post('http://39.124.26.132/Py_php/dirlen.php', user_name)
+    r = requests.post('http://118.36.100.121:1234/img/', user_name)
     a = r.text
     return int(a)
 

@@ -1,4 +1,3 @@
-from pyrsistent import b
 import requests
 from requests import get
 import os

@@ -1,6 +1,4 @@
 import mysql.connector
-from mysql.connector import Error
-from numpy import rec
 
 def atd_upload(id, week, attendance):
 

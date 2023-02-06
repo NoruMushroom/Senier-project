@@ -1,24 +1,25 @@
-import __default__  as default
-from Face_detection import *
+from Option import *
+import Face
 import os
 import time
-
+import pickle
+from tqdm import tqdm
 def reset():
-    with open(default.PKL_Mask_Path,"wb") as a:
+    with open(MASK_PKL,"wb") as a:
         pass
-    with open(default.PKL_NoMask_Path,"wb") as b:
+    with open(NOMASK_PKL,"wb") as b:
         pass
 
-    a = [default.Mask_DB_Path, default.NoMask_DB_Path]
+    a = [MASK_PATH, NOMASK_PATH]
     for i in a:
-        pkl_file = os.path.join(i,default.pkl)
+        pkl_file = os.path.join(i,PKL)
         open_pkl = open(pkl_file,'ab')
         for (root, directories, files) in os.walk(i):
-            for file in files:
+            for file in tqdm(files):
                 if '.jpg' in file:
                     path = (os.path.join(root, file))
                     path = path.replace("\\", '/')
-                    embedding = ArcFace(path)
+                    embedding = Face.Face_detection.ArcFace(path)
                     pickle.dump([path,embedding], open_pkl)
         open_pkl.close()
     

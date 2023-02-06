@@ -10,7 +10,7 @@ import pickle
 import Option
 import shutil
 from Face import *
-
+from ..Option import *
 
 
 
@@ -18,7 +18,7 @@ from Face import *
 def app_verify(Name):                               # 수정 5/23
     print("매칭 중 : " + str(Name))
     app_file_list = []
-    for (root, directories, files) in os.walk(Option.Photo_Path):
+    for (root, directories, files) in os.walk(TEMP_PATH):
                                 for file in files:
                                     if str(Name) in file:
                                         file_path = os.path.join(root, file)
@@ -31,7 +31,7 @@ def app_verify(Name):                               # 수정 5/23
         for j in range(1,len(app_file_list)):
             two = j
             if i < j:                
-                dis = distance.findCosineDistance(ArcFace(app_file_list[i],True), ArcFace(app_file_list[j],True))
+                dis = distance.findCosineDistance(Face_detection.ArcFace(app_file_list[i],True), Face_detection.ArcFace(app_file_list[j],True))
                 if dis > 0.68:               # 거리값 
                     for_exit = True
                     print("사진 안맞음")
@@ -44,7 +44,7 @@ def app_verify(Name):                               # 수정 5/23
         print("다 맞음")
         pickle_upload(app_file_list, Name)        # 사진 저장
         try:
-            os.rmdir(Option.Photo_Path +"/"+ Name)
+            os.rmdir(TEMP_PATH +"/"+ Name)
         except OSError:
             print("디렉터리가 비어 있지 않습니다")    
         try:
@@ -64,7 +64,7 @@ def app_verify(Name):                               # 수정 5/23
         except mysql.connector.Error as error:
             print("업로드 실패 {}".format(error))
 
-        finally:
+        else:
             if (connection.is_connected()):
                 cursor.close()
                 connection.close()
@@ -97,7 +97,7 @@ def app_verify(Name):                               # 수정 5/23
         except mysql.connector.Error as error:
             print("업로드 실패 {}".format(error))
 
-        finally:
+        else:
             if (connection.is_connected()):
                 cursor.close()
                 connection.close()
@@ -111,8 +111,8 @@ def pickle_upload(img_list, Name):
     Name : StudentID
     '''
     
-    Save_Folder_Path = Option.NoMask_DB_Path + "/" + str(Name)         # 폴더 없으면 생성
-    Save_MaFolder_Path = Option.Mask_DB_Path + "/" + str(Name)
+    Save_Folder_Path = NOMASK_PATH + "/" + str(Name)         # 폴더 없으면 생성
+    Save_MaFolder_Path = MASK_PATH + "/" + str(Name)
     
     try:
         if not os.path.exists(Save_Folder_Path):
@@ -141,7 +141,7 @@ def pickle_upload(img_list, Name):
     b = []
     for k in img_list:
         shutil.move(k, save_path)
-        cv2.imwrite(save_path,face_box(save_path))
+        cv2.imwrite(save_path,Face_detection.face_box(save_path))
         b.append(save_path)
         number += 1
         # dir , studentID + _ + number:int + extension
@@ -152,10 +152,10 @@ def pickle_upload(img_list, Name):
             
     
     for i in b:
-        embedding = ArcFace(i)
+        embedding = Face_detection.ArcFace(i)
         with open(Option.PKL_NoMask_Path, "ab") as p:
             pickle.dump([i, embedding], p)
-    save_masked_image(b)                      # mask 임베딩
+    Face_detection.save_masked_image(b)                      # mask 임베딩
 
     print("업로드 및 nomask 사진 이동 완료")
 
